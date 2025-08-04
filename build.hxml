@@ -1,0 +1,14 @@
+-cp src
+
+-lib heaps
+-lib hlsdl
+-lib format
+-lib ludi-commons
+-lib heaps-feather-icons
+-lib heaps-coroutine
+-lib no-spoon
+
+
+-hl build.hl
+
+-main Main
