@@ -1,0 +1,156 @@
+import hxd.FloatBuffer;
+import hxd.Key;
+import h3d.shader.AmbientLight;
+import h3d.scene.fwd.DirLight;
+import h3d.scene.*;
+import hxd.App;
+
+class SoccerBallPrim extends h3d.prim.Primitive {
+    var cachedBounds: h3d.col.Bounds;
+
+    public function new() {
+        cachedBounds = new h3d.col.Bounds();
+    }
+
+    override function alloc(engine: h3d.Engine) {
+        var pos = [0.20177410616759883, 0.7300255741640024, 0.6529547236576094, -0.20177410616759883, -0.7300255741640024, 0.6529547236576094, -0.3264773618288047, 0.40354821233519766, -0.8547288298252083, 0.0, -0.20177410616759883, -0.9794320854864141, -0.40354821233519766, 0.8547288298252083, 0.3264773618288047, -0.7300255741640024, 0.6529547236576094, 0.20177410616759883, -0.7300255741640024, 0.6529547236576094, -0.20177410616759883, 0.8547288298252083, -0.3264773618288047, -0.40354821233519766, -0.20177410616759883, -0.9794320854864141, 0.0, 0.6529547236576094, -0.20177410616759883, -0.7300255741640024, 0.20177410616759883, -0.7300255741640024, -0.6529547236576094, -0.20177410616759883, 0.7300255741640024, 0.6529547236576094, 0.9794320854864141, 0.0, -0.20177410616759883, 0.7300255741640024, -0.6529547236576094, -0.20177410616759883, 0.40354821233519766, -0.8547288298252083, -0.3264773618288047, 0.20177410616759883, 0.9794320854864141, 0.0, 0.9794320854864141, 0.0, 0.20177410616759883, 0.7300255741640024, -0.6529547236576094, 0.20177410616759883, 0.3264773618288047, -0.40354821233519766, 0.8547288298252083, -0.6529547236576094, 0.20177410616759883, 0.7300255741640024, -0.9794320854864141, 0.0, -0.20177410616759883, 0.0, 0.20177410616759883, 0.9794320854864141, -0.20177410616759883, 0.9794320854864141, 0.0, -0.9794320854864141, 0.0, 0.20177410616759883, 0.20177410616759883, 0.7300255741640024, -0.6529547236576094, 0.40354821233519766, -0.8547288298252083, 0.3264773618288047, 0.3264773618288047, -0.40354821233519766, -0.8547288298252083, -0.20177410616759883, -0.7300255741640024, -0.6529547236576094, -0.40354821233519766, -0.8547288298252083, -0.3264773618288047, -0.6529547236576094, -0.20177410616759883, 0.7300255741640024, 0.7300255741640024, 0.6529547236576094, -0.20177410616759883, 0.3264773618288047, 0.40354821233519766, 0.8547288298252083, 0.7300255741640024, 0.6529547236576094, 0.20177410616759883, -0.40354821233519766, -0.8547288298252083, 0.3264773618288047, -0.6529547236576094, 0.20177410616759883, -0.7300255741640024, 0.8547288298252083, 0.3264773618288047, 0.40354821233519766, 0.0, -0.20177410616759883, 0.9794320854864141, -0.8547288298252083, -0.3264773618288047, 0.40354821233519766, -0.3264773618288047, -0.40354821233519766, 0.8547288298252083, 0.6529547236576094, 0.20177410616759883, 0.7300255741640024, 0.3264773618288047, 0.40354821233519766, -0.8547288298252083, -0.8547288298252083, 0.3264773618288047, 0.40354821233519766, -0.20177410616759883, 0.7300255741640024, -0.6529547236576094, 0.0, 0.20177410616759883, -0.9794320854864141, -0.6529547236576094, -0.20177410616759883, -0.7300255741640024, -0.8547288298252083, 0.3264773618288047, -0.40354821233519766, 0.40354821233519766, 0.8547288298252083, -0.3264773618288047, 0.8547288298252083, -0.3264773618288047, 0.40354821233519766, 0.20177410616759883, -0.7300255741640024, 0.6529547236576094, -0.3264773618288047, -0.40354821233519766, -0.8547288298252083, -0.7300255741640024, -0.6529547236576094, 0.20177410616759883, -0.7300255741640024, -0.6529547236576094, -0.20177410616759883, 0.6529547236576094, 0.20177410616759883, -0.7300255741640024, 0.40354821233519766, 0.8547288298252083, 0.3264773618288047, 0.20177410616759883, -0.9794320854864141, 0.0, -0.3264773618288047, 0.40354821233519766, 0.8547288298252083, 0.6529547236576094, -0.20177410616759883, 0.7300255741640024, 0.8547288298252083, 0.3264773618288047, -0.40354821233519766, -0.40354821233519766, 0.8547288298252083, -0.3264773618288047, -0.8547288298252083, -0.3264773618288047, -0.40354821233519766];
+
+        var idx = [0, 11, 4, 0, 4, 22, 0, 22, 15, 0, 15, 53, 0, 11, 55, 0, 55, 21, 0, 21, 31, 0, 31, 39, 0, 39, 35, 0, 35, 32, 0, 32, 53, 1, 33, 8, 1, 8, 54, 1, 54, 25, 1, 25, 48, 1, 33, 50, 1, 50, 37, 1, 37, 29, 1, 29, 38, 1, 38, 36, 1, 36, 18, 1, 18, 48, 2, 34, 44, 2, 44, 49, 2, 49, 3, 2, 3, 43, 2, 34, 45, 2, 45, 6, 2, 6, 58, 2, 58, 42, 2, 42, 24, 2, 24, 40, 2, 40, 43, 3, 26, 9, 3, 9, 52, 3, 52, 40, 3, 40, 43, 3, 26, 10, 3, 10, 27, 3, 27, 49, 4, 5, 6, 4, 6, 58, 4, 58, 22, 4, 5, 41, 4, 41, 19, 4, 19, 55, 4, 55, 11, 5, 6, 45, 5, 45, 20, 5, 20, 23, 5, 23, 41, 7, 9, 26, 7, 26, 10, 7, 10, 14, 7, 14, 13, 7, 9, 52, 7, 52, 57, 7, 57, 12, 7, 12, 16, 7, 16, 47, 7, 47, 17, 7, 17, 13, 8, 28, 27, 8, 27, 10, 8, 10, 14, 8, 14, 54, 8, 28, 51, 8, 51, 50, 8, 50, 33, 12, 16, 35, 12, 35, 32, 12, 32, 30, 12, 30, 57, 13, 14, 54, 13, 54, 25, 13, 25, 17, 15, 22, 58, 15, 58, 42, 15, 42, 24, 15, 24, 46, 15, 46, 30, 15, 30, 32, 15, 32, 53, 16, 35, 39, 16, 39, 56, 16, 56, 47, 17, 25, 48, 17, 48, 18, 17, 18, 56, 17, 56, 47, 18, 36, 21, 18, 21, 31, 18, 31, 39, 18, 39, 56, 19, 29, 37, 19, 37, 23, 19, 23, 41, 19, 29, 38, 19, 38, 36, 19, 36, 21, 19, 21, 55, 20, 23, 37, 20, 37, 50, 20, 50, 51, 20, 51, 59, 20, 45, 34, 20, 34, 44, 20, 44, 59, 24, 40, 52, 24, 52, 57, 24, 57, 30, 24, 30, 46, 27, 28, 51, 27, 51, 59, 27, 59, 44, 27, 44, 49];
+
+        var normals = [];
+        for (i in 0...60) {
+            var x = pos[i*3];
+            var y = pos[i*3+1];
+            var z = pos[i*3+2];
+            normals.push(x);
+            normals.push(y);
+            normals.push(z);
+        } // Already unit normals
+
+        var uvs = [];
+        for (i in 0...60) {
+            var x = pos[i*3];
+            var y = pos[i*3+1];
+            var z = pos[i*3+2];
+            var u = 0.5 + Math.atan2(x, z) / (2 * Math.PI);
+            var v = 0.5 - Math.asin(y) / Math.PI;
+            uvs.push(u);
+            uvs.push(v);
+        }
+
+        // Define the vertex format: position (vec3), normal (vec3), uv (vec2)
+        @:privateAccess var format = new hxd.BufferFormat([
+            { name: "position", type: DVec3 },
+            { name: "normal", type: DVec3 },
+            { name: "uv", type: DVec2 }
+        ]);
+
+        var vecs:hxd.FloatBuffer = new FloatBuffer();
+        for (i in 0...60) {
+            vecs.push(pos[i*3]);
+            vecs.push(pos[i*3+1]);
+            vecs.push(pos[i*3+2]);
+            vecs.push(normals[i*3]);
+            vecs.push(normals[i*3+1]);
+            vecs.push(normals[i*3+2]);
+            vecs.push(uvs[i*2]);
+            vecs.push(uvs[i*2+1]);
+        }
+
+        var vbuf = new h3d.Buffer(60, format);
+        vbuf.uploadFloats(vecs, 0, 60);
+
+        // Precompute bounds
+        cachedBounds.empty();
+        for (i in 0...60) {
+            var px = pos[i*3];
+            var py = pos[i*3+1];
+            var pz = pos[i*3+2];
+            cachedBounds.addPos(px, py, pz);
+        }
+
+        var ibuf = new h3d.Indexes(idx.length);
+        var innerBuff = new hxd.IndexBuffer();
+        for (i in 0...idx.length) {
+            innerBuff.push(idx[i]);
+        }
+        ibuf.uploadIndexes(innerBuff, 0, idx.length);
+
+        buffer = vbuf;
+        indexes = ibuf;
+    }
+
+    override function triCount() {
+        return Std.int(indexes.count / 3);
+    }
+
+    override function render(engine: h3d.Engine) {
+        if (buffer == null || buffer.isDisposed()) alloc(engine);
+        engine.renderIndexed(buffer, indexes, 0, triCount());
+    }
+
+    override function getBounds() {
+        return cachedBounds.clone();
+    }
+}
+
+
+
+class Main extends App {
+    var sphere: Mesh;
+
+    override function init() {
+        hxd.Res.initEmbed();
+        // Create a sphere primitive with radius 1, 32 horizontal segments, and 32 vertical segments
+        var prim = new SoccerBallPrim();
+        //prim.addNormals(); // Add normals for lighting
+        //prim.addUVs();     // Add UVs if you want to texture it later
+
+        // Create a mesh from the primitive and add it to the 3D scene
+        sphere = new Mesh(prim, s3d);
+        sphere.material.mainPass.culling = None;
+        sphere.material.mainPass.enableLights = true; // Enable lighting on the material
+        sphere.material.shadows = true; // Enable shadows if needed
+
+             // Load and apply the Earth texture
+             var tex = hxd.Res.palettetown.toTexture(); // Assumes the resource is embedded as 'earth_jpg'
+             tex.wrap = Clamp; // Clamp wrapping to avoid seams on the sphere
+             tex.filter = Linear; // Smooth filtering for better appearance
+             sphere.material.texture = tex;
+
+        // Add a directional light
+        var light = new DirLight(new h3d.Vector(-1, -3, -5), s3d);
+        light.enableSpecular = true;
+
+        // Add ambient light
+     //   var ambient = new AmbientLight();
+
+        // Position the camera
+        s3d.camera.pos.set(0, 0, 5);
+        s3d.camera.target.set(0, 0, 0);
+    }
+
+    override function update(dt: Float) {
+        var rotationSpeed = 2.0; // Radians per second; adjust as needed for sensitivity
+
+        // Rotate around Y-axis (left-right) with left and right arrow keys
+        if (Key.isDown(Key.LEFT)) {
+            sphere.rotate(0, rotationSpeed * dt, 0);
+        }
+        if (Key.isDown(Key.RIGHT)) {
+            sphere.rotate(0, -rotationSpeed * dt, 0);
+        }
+
+        // Rotate around X-axis (up-down) with up and down arrow keys
+        if (Key.isDown(Key.UP)) {
+            sphere.rotate(-rotationSpeed * dt, 0, 0); // Negative to tilt top towards camera
+        }
+        if (Key.isDown(Key.DOWN)) {
+            sphere.rotate(rotationSpeed * dt, 0, 0);
+        }
+    }
+
+    static function main() {
+        new Main();
+    }
+}
