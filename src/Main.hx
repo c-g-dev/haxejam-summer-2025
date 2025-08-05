@@ -7,10 +7,14 @@ import h3d.scene.fwd.DirLight;
 import h3d.scene.*;
 import h3d.prim.*;
 import hxd.Event;
+import h2d.Text;
 
 class Main extends hxd.App {
 
     var sphere: Object;
+    var labels: Array<{pos: h3d.Vector, text: h2d.Text}> = [];
+    var newVerts: Array<h3d.Vector>;
+    var subFaces: Array<Array<Int>>;
 
     
     override function init() {
@@ -96,9 +100,9 @@ class Main extends hxd.App {
                 ];
         
                 // Subdivide: create new vertices (midpoints) and subdivided faces
-                var newVerts = verts.copy(); // Start with originals (indices 0-11)
+                newVerts = verts.copy(); // Start with originals (indices 0-11)
                 var midMap = new Map<String, Int>(); // Key: "min-max", Value: new vertex index
-                var subFaces = []; // Array<Array<Int>> for 80 subdivided faces
+                subFaces = []; // Array<Array<Int>> for 80 subdivided faces
         
                 // Helper to get/create midpoint index
                 function getMid(a: Int, b: Int): Int {
@@ -194,7 +198,38 @@ class Main extends hxd.App {
         }
         
         sphere.addChild(g);
+
+        // Add labels for each subdivided face
+        var font = hxd.res.DefaultFont.get();
+        for (i in 0...subFaces.length) {
+            var sf = subFaces[i];
+            var centroid = new h3d.Vector(0, 0, 0);
+            for (vidx in sf) {
+                var v = newVerts[vidx];
+                centroid.x += v.x;
+                centroid.y += v.y;
+                centroid.z += v.z;
+            }
+            centroid.scale(1 / 3);
+            centroid.normalize();  // Project back to sphere surface
+
+            var t = new h2d.Text(font, s2d);
+            t.text = Std.string(i);
+            t.textColor = 0xFF0000;
+            t.dropShadow = { dx: 1, dy: 1, color: 0x000000, alpha: 0.5 };  // For better visibility
+
+            labels.push({ pos: centroid, text: t });
+        }
          
+    }
+
+    function centerOnTriangle(index: Int) {
+        if (index < 0 || index >= labels.length) return;
+        var cent = labels[index].pos.clone();
+        var dist = s3d.camera.pos.length();
+        cent.scale(dist);
+        s3d.camera.pos.load(cent);
+        s3d.camera.update();
     }
 
     static function main() {
@@ -210,6 +245,14 @@ class Main extends hxd.App {
         var rotationSpeed = 2.0; // Radians per second; adjust as needed for sensitivity
         var q_delta = new h3d.Quat();
         q_delta.identity();
+        
+        if(Key.isDown(Key.A)) {
+            centerOnTriangle(0);
+        }
+        if(Key.isDown(Key.S)) {
+            centerOnTriangle(1);
+        }
+        
         
         if (Key.isDown(Key.LEFT)) {
             var q_temp = new h3d.Quat();
@@ -246,6 +289,40 @@ class Main extends hxd.App {
         }
         if (Key.isDown(Key.SHIFT)) {
             s3d.camera.zoom -= 0.1;
+        }
+
+        // Update labels
+        var tanFov = Math.tan(s3d.camera.fovY * Math.PI / 180 / 2);
+        for (l in labels) {
+            var dot = l.pos.dot(s3d.camera.pos);
+            if (dot <= 1) {
+                l.text.visible = false;
+                continue;
+            }
+
+            var p = l.pos.clone();
+            p.project(s3d.camera.m);
+            if (p.z < 0) {
+                l.text.visible = false;
+                continue;
+            }
+            l.text.visible = true;
+
+            var dist = s3d.camera.pos.distance(l.pos);
+            var px_per_world = s2d.height * s3d.camera.zoom / (2 * dist * tanFov);
+            var desired_world_size = 0.05;  // Adjust this value to change the apparent size of the labels on the sphere
+            var target_px = desired_world_size * px_per_world;
+            var scale = target_px / l.text.textWidth;
+
+            l.text.scaleX = scale;
+            l.text.scaleY = scale;
+
+            l.text.x = (p.x * 0.5 + 0.5) * s2d.width;
+            l.text.y = (-p.y * 0.5 + 0.5) * s2d.height;
+
+            // Center the text
+            l.text.x -= l.text.textWidth * scale / 2;
+            l.text.y -= l.text.textHeight * scale / 2;
         }
     }
         
