@@ -19,8 +19,12 @@ class Planet extends h3d.scene.Object {
     var subFaces: Array<Array<Int>>;
     var adjMap: Map<Int, Array<Int>>;
 
-    public function new(parent: Object, s2d: h2d.Scene) {
+    public var cameraMover: PlanetCamera;
+
+    public function new(parent: Object, s2d: h2d.Scene, camera: h3d.Camera) {
         super(parent);
+
+        cameraMover = new PlanetCamera(this, camera);
 
         sphere = new Object(this);
 
@@ -274,6 +278,11 @@ class Planet extends h3d.scene.Object {
             l.text.x -= l.text.textWidth * scale / 2;
             l.text.y -= l.text.textHeight * scale / 2;
         }
+    }
+
+    public function getTriangleCenter(index: Int): h3d.Vector {
+        if (index < 0 || index >= labels.length) return null;
+        return labels[index].pos.clone();
     }
 
     public function centerOnTriangle(index: Int, camera: h3d.Camera) {

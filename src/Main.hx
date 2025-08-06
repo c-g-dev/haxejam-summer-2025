@@ -23,14 +23,14 @@ class Main extends hxd.App {
         var dirLight = new DirLight(new h3d.Vector(0.5, 0.5, -0.5), s3d);
         dirLight.enableSpecular = true;
 
-        planet = new Planet(s3d, s2d);
+        planet = new Planet(s3d, s2d, s3d.camera);
         
         s3d.camera.pos.set(0, 0, 5);
         s3d.camera.target.set(0, 0, 0);
 
         s3d.addChild(new Sun(s3d));
 
-        s2d.addChild(new MechSpriteOverlay());
+        s2d.addChild(new MechSpriteOverlay(planet));
 
     }
 
@@ -43,11 +43,18 @@ class Main extends hxd.App {
         h3d.mat.MaterialSetup.current = new h3d.mat.PbrMaterialSetup();
     }
 
+    var currentTri: Int = 0;
+
     override function update(dt: Float) {
         var rotationSpeed = 2.0; // Radians per second; adjust as needed for sensitivity
         var q_delta = new h3d.Quat();
         q_delta.identity();
         
+        if(Key.isPressed(Key.UP)) {
+            planet.cameraMover.moveToTriangle(currentTri++, 2);
+        }
+
+        /*
         if (Key.isDown(Key.LEFT)) {
             var q_temp = new h3d.Quat();
             q_temp.initRotateAxis(0, 1, 0, rotationSpeed * dt);
@@ -69,6 +76,9 @@ class Main extends hxd.App {
             q_temp.initRotateAxis(1, 0, 0, rotationSpeed * dt);
             q_delta.multiply(q_delta, q_temp);
         }
+
+        
+        
         
         // Apply the inverse rotation to the camera position
         var q_inv = q_delta.clone();
@@ -77,6 +87,8 @@ class Main extends hxd.App {
         q_inv.toMatrix(m);
         
         s3d.camera.pos.transform(m);
+
+                */
         
         if (Key.isDown(Key.SPACE)) {
             s3d.camera.zoom += 0.1;
@@ -88,6 +100,5 @@ class Main extends hxd.App {
         planet.updateLabels(s3d.camera, s2d);
     }
         
-    
     
 }
