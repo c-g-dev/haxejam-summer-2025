@@ -11,4 +11,4 @@
 
 -hl build.hl
 
--main engine.EventTests
+-main StateTestMain

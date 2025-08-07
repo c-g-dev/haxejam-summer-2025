@@ -53,7 +53,7 @@ typedef ResourceBundle = Map<ResourceType, Int>; // Generic cost / reward bag
 // ──────────────────────────────────────────────────────
 class World {
 	public var dayCount:Int = 0; // How many full days elapsed
-	public var quarter:Quarter = Dawn; // Current quarter of the day
+	public var quarter:Quarter = OccindentalRising; // Current quarter of the day
 	public var zones:Array<TriZone>; // Fixed length = 80
 	public var seedPool:SeedPool; // Gives the “3-pack” each quarter
 	public var player:Mech; // The player’s mech

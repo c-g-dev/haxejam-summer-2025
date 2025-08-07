@@ -1,0 +1,16 @@
+Coro.tween
+
+Coro.step({
+    //block expr
+});
+
+converts to
+
+Coro.start((_) -> //block expr//).await();
+
+
+
+
+add support for this syntax
+
+Coro.once({//expr block//})
