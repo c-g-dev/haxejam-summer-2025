@@ -121,10 +121,10 @@ class DrawRoundedBorderPlugin extends BoxPlugin {
         
         border.lineStyle(thickness * 10, color, 1);
         border.drawRoundedRect(0, 0, width * 10, height * 10, cornerRadius * 10);
-        border.lineStyle(thickness * 10, color, 0.3);
+       /* border.lineStyle(thickness * 10, color, 0.3);
         border.drawRoundedRect(0, 0, width * 10, height * 10, cornerRadius * 12);
         border.lineStyle(thickness * 10, color, 0.1);
-        border.drawRoundedRect(0, 0, width * 10, height * 10, cornerRadius * 13);
+        border.drawRoundedRect(0, 0, width * 10, height * 10, cornerRadius * 13);*/
         /*border.scaleX = 0.1;
         border.scaleY = 0.1;
         */

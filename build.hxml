@@ -11,4 +11,4 @@
 
 -hl build.hl
 
--main TestMain
+-main UITestMain
