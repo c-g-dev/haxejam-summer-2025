@@ -1,11 +1,14 @@
 package data;
 
+
 enum abstract Quarter(Int) {
-	var Dawn = 0; // 0 – 6  h
-	var Midday = 1; // 6 – 12 h
-	var Dusk = 2; // 12 – 18 h
-	var Midnight = 3; // 18 – 24 h
+	var OccindentalRising = 0;
+	var Occindental = 1;
+	var OrientalRising = 2;
+	var Oriental = 3;
 }
+
+typedef MaterialType = String;
 
 enum abstract ResourceType(Int) {
 	var Sun = 0;
@@ -35,6 +38,11 @@ enum abstract Rarity(Int) {
 	var Rare = 2;
 	var Epic = 3;
 	var Legendary = 4;
+}
+
+typedef Chance<T> = {
+	chance: Float,
+	value: T
 }
 
 typedef Range = {min:Float, max:Float};
@@ -87,9 +95,11 @@ class Environment {
 	public var dailyVariance:Float = 0; // How much it swings each day
 	public var waterLevel:Float = 0; // 0-1
 	public var soil:SoilType = Sandy;
-	public var materialYield:Map<MaterialType, Int> = new Map(); // Loot per harvest
+	public var materialYield:Array<Chance<Material>>;
 	public var weatherPattern:Array<WeatherType> = []; // e.g. 16 values per day
 	public var currentWeather:WeatherType = Clear;
+
+	public function new() {}
 }
 
 // ──────────────────────────────────────────────────────
@@ -117,7 +127,6 @@ class PlantType {
 	public var id:String;
 	public var name:String;
 	public var maxHp:Int;
-	public var baseYield:ResourceBundle; // Resources generated per cycle
 	public var effect:PlantEffect; // Automatic or activatable
 
 	public function new(id:String)
@@ -126,7 +135,9 @@ class PlantType {
 
 enum PlantEffectKind {
 	Passive;
+	OnDayTick;
 	Activatable;
+	Combat;
 }
 
 class PlantEffect {
@@ -137,8 +148,7 @@ class PlantEffect {
 
 enum PlantState {
 	Seed;
-	Sprout;
-	Mature;
+	Sprouted;
 	Dead;
 }
 
@@ -198,7 +208,7 @@ class AttackDef {
 }
 
 typedef LootTable = Array<{
-	item:MaterialType,
+	item:Material,
 	min:Int,
 	max:Int,
 	chance:Float
@@ -245,6 +255,8 @@ class Stats {
 	public var hp:Int = 0;
 	public var power:Int = 0;
 	public var defense:Int = 0;
+
+	public function new() {}
 
 	public inline function add(kind:StatKind, v:Int)
 		switch (kind) {
@@ -326,9 +338,6 @@ class Inventory {
 	public var materials:Map<MaterialType, Int> = new Map();
 	public var seeds:Map<SeedType, Int> = new Map();
 
-	public inline function addRes(rt:ResourceType, v:Int) {
-		resources.set(rt, resources.get(rt, 0) + v);
-	}
 }
 
 // ──────────────────────────────────────────────────────
@@ -337,45 +346,17 @@ class Inventory {
 class SeedPool {
 	public var catalog:Array<SeedType>; // All possible seeds
 
-	public function drawThree():Array<SeedType> {
-		var acc = new Array<SeedType>();
-		while (acc.length < 3) {
-			var s = catalog[Std.random(catalog.length)];
-			// rarities could be weighted here
-			acc.push(s);
-		}
-		return acc;
-	}
-}
-
-// ──────────────────────────────────────────────────────
-// 10. AUTOMATIC MINI-COMBAT BETWEEN PLANTS & SPAWNED MONSTERS
-// ──────────────────────────────────────────────────────
-class MiniCombat {
-	public static function resolve(zone:TriZone, neighbourPlant:PlantInstance):DamageEvent {
-		// Called when a spawned monster assaults a bordering plant
-		var attacker = zone.monsters[1]; // second monster (index 1) for example
-		var damage = attacker.type.attacks[0].damage; // simplistic
-		neighbourPlant.hp -= damage;
-		var killed = neighbourPlant.hp <= 0;
-		return {
-			attackerId: attacker.type.id,
-			defenderId: neighbourPlant.type.id,
-			damage: damage,
-			killed: killed
-		};
-	}
+	
 }
 
 // ──────────────────────────────────────────────────────
 // 11. MATERIALS (FOR COMPLETENESS)
 // ──────────────────────────────────────────────────────
-enum abstract MaterialType(Int) {
-	var Wood;
-	var Fiber;
-	var Metal;
-	var BioGel;
-	var Crystal;
+class Material {
+	public var id:String;
+	public var name:String;
+	public var description:String;
+	public var rarity:Rarity;
 }
 
 // ───────────────────────────────

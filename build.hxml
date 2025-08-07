@@ -7,8 +7,8 @@
 -lib heaps-feather-icons
 -lib heaps-coroutine
 -lib no-spoon
-
+-lib utest
 
 -hl build.hl
 
--main UITestMain
+-main engine.EventTests

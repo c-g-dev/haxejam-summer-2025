@@ -1,18 +1,12 @@
 package data;
 
+//services are for "querying" the world
+
 class PlantService {
 
     public static function canPlant(seed, zone, world) {
 
     }
-
-    public static function plant(seed, zone, world) {
-        
-    }
-
-    public static function removePlant(zone, world) {
-    }
-
 }
 
 
@@ -26,18 +20,6 @@ class ZoneService {
 
 }
 
-typedef DayStepActions = World -> Void;
-
-class DayService {
-
-    public static function collectDayStepActions(world): Array<DayStepActions> {
-        
-    }
-
-    public static function incrementDayStep(world){
-
-    }
-}
 
 class RandomService {
 
@@ -49,20 +31,7 @@ class RandomService {
 
     }
 
-
-
 }
 
-class CombatService {
 
-    public static function useAttack(){
-
-    }
-   
-}
-
-class RaidService {
-    public static function doRaid() {
-        
-    }
-}
+//etc
