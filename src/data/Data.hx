@@ -205,6 +205,8 @@ class AttackDef {
 	public var damage:Int; // Could be formula later
 	public var hitsAll:Bool = false; // Meant for AoE
 	public var special:String; // Free-form tag/effect id
+
+	public function new() {}
 }
 
 typedef LootTable = Array<{
@@ -229,6 +231,8 @@ class Mech {
 	public var currentStats:Stats = new Stats();
 	public var weaponSlots:Array<WeaponInstance> = [];
 	public var skillTree:SkillTree = new SkillTree();
+
+	public function new() {}
 
 	// Apply a permanent base stat upgrade (skill, crafting, etc.)
 	public inline function addBase(stat:StatKind, amount:Int) {
@@ -317,11 +321,15 @@ class SkillNode {
 	public var prerequisites:Array<String>; // Node ids
 	public var effect:(Stats) -> Void;
 	public var purchased:Bool = false;
+
+	public function new() {}
 }
 
 class SkillTree {
 	public var nodes:Map<String, SkillNode> = new Map();
 	public var points:Int = 0;
+
+	public function new() {}
 
 	public function applyPassives(out:Stats) {
 		for (n in nodes)
@@ -338,6 +346,7 @@ class Inventory {
 	public var materials:Map<MaterialType, Int> = new Map();
 	public var seeds:Map<SeedType, Int> = new Map();
 
+	public function new() {}
 }
 
 // ──────────────────────────────────────────────────────
@@ -346,7 +355,7 @@ class Inventory {
 class SeedPool {
 	public var catalog:Array<SeedType>; // All possible seeds
 
-	
+	public function new() {}
 }
 
 // ──────────────────────────────────────────────────────
@@ -357,6 +366,8 @@ class Material {
 	public var name:String;
 	public var description:String;
 	public var rarity:Rarity;
+
+	public function new() {}
 }
 
 // ───────────────────────────────

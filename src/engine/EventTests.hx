@@ -17,6 +17,12 @@ import data.Data.WeaponInstance;
 import data.Data.Monster;
 import data.Data.SkillNode;
 import data.Data.ResourceType;
+import data.Data.PlantState;
+import data.Data.AttackDef;
+import data.Data.TriZone;
+
+import engine.Events.*;
+import engine.impl.EventImpl.WorldTools;
 
 using Lambda;
 
@@ -30,7 +36,7 @@ class EngineTest extends Test {
 	var matT:Material;
 
 	// ──────────────────────────────────────────────────────────
-	override function setup() {
+    function setup() {
 		// fresh world + cleared event queue
 		world = buildWorld();
 		WorldEngine.world = world;

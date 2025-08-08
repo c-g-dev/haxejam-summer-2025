@@ -1,14 +1,16 @@
 package engine;
 
+import data.Data.World;
+import heaps.coroutine.Future;
 
 interface IWorldEvent {
     function changeWorld(world: World): Future;
 }
 
 class WorldEngine {
-    static var queue: Array<IWorldEvent> = [];
-    static var isProcessing: Bool = false;
-    static var world: World;
+    public static var queue: Array<IWorldEvent> = [];
+    public static var isProcessing: Bool = false;
+    public static var world: World;
 
 
 
@@ -21,7 +23,7 @@ class WorldEngine {
         if(isProcessing) return;
         isProcessing = true;
         var event = queue.shift();
-        event(world).then(() -> {
+        event.changeWorld(world).then(() -> {
             if(queue.length > 0) {
                 processEvents();
             } else {
@@ -33,7 +35,7 @@ class WorldEngine {
 
 
 class WorldEvent implements IWorldEvent {
-    public callback: (World) -> Future;
+    public var callback: (World) -> Future;
 
     public function new(callback: (World) -> Future) {
         this.callback = callback;

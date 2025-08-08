@@ -1,37 +1,36 @@
 package engine;
 
+// events should be the only way to change the world object
+// This module provides short, stable type names that alias the
+// actual implementations in `engine.EventImpl`.
 
+typedef PlantSeedEvent = engine.impl.EventImpl.PlantSeedEvent;
+typedef UpgradePlantEvent = engine.impl.EventImpl.UpgradePlantEvent;
+typedef RemovePlantEvent = engine.impl.EventImpl.RemovePlantEvent;
 
-//events should be the only way to change the world object
+typedef InitiateCombatEvent = engine.impl.EventImpl.InitiateCombatEvent;
+typedef ExecuteAttackEvent = engine.impl.EventImpl.ExecuteAttackEvent;
+typedef EndCombatEvent = engine.impl.EventImpl.EndCombatEvent;
 
-class PlantSeedEvent implements IWorldEvent { /* ... */ }
-class UpgradePlantEvent implements IWorldEvent { /* ... */ }
-class RemovePlantEvent implements IWorldEvent { /* ... */ }
+typedef DayAdvanceEvent = engine.impl.EventImpl.DayAdvanceEvent;
 
-class InitiateCombatEvent implements IWorldEvent { /* ... */ }
-class ExecuteAttackEvent implements IWorldEvent { /* ... */ }
-class EndCombatEvent implements IWorldEvent { /* ... */ }
+typedef IncrementResourceEvent = engine.impl.EventImpl.IncrementResourceEvent;
+typedef DecrementResourceEvent = engine.impl.EventImpl.DecrementResourceEvent;
 
-class DayAdvanceEvent implements IWorldEvent { /* ... */ }
+typedef GetMaterialEvent = engine.impl.EventImpl.GetMaterialEvent;
+typedef RemoveMaterialEvent = engine.impl.EventImpl.RemoveMaterialEvent;
 
-class IncrementResourceEvent implements IWorldEvent { /* ... */ }
-class DecrementResourceEvent implements IWorldEvent { /* ... */ }
+typedef ActivateSkillTreeNodeEvent = engine.impl.EventImpl.ActivateSkillTreeNodeEvent;
 
-class GetMaterialEvent implements IWorldEvent { /* ... */ }
-class RemoveMaterialEvent implements IWorldEvent { /* ... */ }
+typedef CraftWeaponEvent = engine.impl.EventImpl.CraftWeaponEvent;
+typedef UpgradeWeaponEvent = engine.impl.EventImpl.UpgradeWeaponEvent;
 
-class ActivateSkillTreeNodeEvent implements IWorldEvent { /* ... */ }
+typedef SpawnMonsterEvent = engine.impl.EventImpl.SpawnMonsterEvent;
+typedef RemoveMonsterEvent = engine.impl.EventImpl.RemoveMonsterEvent;
 
-class CraftWeaponEvent implements IWorldEvent { /* ... */ }
-class UpgradeWeaponEvent implements IWorldEvent { /* ... */ }
+typedef InitiateRaidEvent = engine.impl.EventImpl.InitiateRaidEvent;
+typedef ExecuteRaidEvent = engine.impl.EventImpl.ExecuteRaidEvent;
+typedef EndRaidEvent = engine.impl.EventImpl.EndRaidEvent;
 
-class SpawnMonsterEvent implements IWorldEvent { /* ... */ }
-class RemoveMonsterEvent implements IWorldEvent { /* ... */ }
-
-class InitiateRaidEvent implements IWorldEvent { /* ... */ }
-class ExecuteRaidEvent implements IWorldEvent { /* ... */ }
-class EndRaidEvent implements IWorldEvent { /* ... */ }
-
-class DayAdvanceEvent implements IWorldEvent { /* ... */ }
-class ChangeWeatherEvent implements IWorldEvent { /* ... */ }
-class ChangeHeatVarianceEvent implements IWorldEvent { /* ... */ }
+typedef ChangeWeatherEvent = engine.impl.EventImpl.ChangeWeatherEvent;
+typedef ChangeHeatVarianceEvent = engine.impl.EventImpl.ChangeHeatVarianceEvent;

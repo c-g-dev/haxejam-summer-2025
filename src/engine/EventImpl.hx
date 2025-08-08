@@ -1,10 +1,26 @@
-package engine;
+package engine.impl;
 
-// ────────────────────────────────────────────────────────────────
-//  Runtime helpers (tiny synchronous “Future” implementation)
-// ────────────────────────────────────────────────────────────────
-typedef Future = _backend.FutureVoid;
+import heaps.coroutine.Future;
 
+import data.Data.World;
+import data.Data.ResourceType;
+import data.Data.MaterialType;
+import data.Data.SoilType;
+import data.Data.Quarter;
+import data.Data.WeatherType;
+import data.Data.Rarity;
+import data.Data.Range;
+import data.Data.SeedType;
+import data.Data.PlantType;
+import data.Data.PlantInstance;
+import data.Data.PlantState;
+import data.Data.PlantEffectKind;
+import data.Data.TriZone;
+import data.Data.WeaponType;
+import data.Data.WeaponInstance;
+import data.Data.Stats;
+import data.Data.Monster;
+import data.Data.MonsterType;
 
 class WorldTools {
 	public static inline function addResource(w:World, t:ResourceType, v:Int) {
@@ -93,8 +109,8 @@ class ZoneService {
 				out.push("plant_seed");
 			else {
 				out.push("remove_plant");
-				if (z.plant.state == Sprouted && z.plant.type.effect != null
-					&& z.plant.type.effect.kind == Activatable && z.plant.cdLeft <= 0)
+                if (z.plant.state == PlantState.Sprouted && z.plant.type.effect != null
+                    && z.plant.type.effect.kind == PlantEffectKind.Activatable && z.plant.cdLeft <= 0)
 					out.push("use_plant_effect");
 			}
 		}
@@ -175,8 +191,8 @@ class BaseWorldEvent implements IWorldEvent {
 	public inline function invoke(w:World):Future
 		return changeWorld(w);
 
-	public function changeWorld(world:World):Future
-		return _backend.Futures.immediate(); // override in derived
+    public function changeWorld(world:World):Future
+        return Future.immediate(); // override in derived
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -202,15 +218,15 @@ class PlantSeedEvent extends BaseWorldEvent {
 
 		// 2. Instantiate the plant (still in Seed state)
 		var p = new PlantInstance(seed.resultPlant, zoneId);
-		p.state      = Seed;
+        p.state      = PlantState.Seed;
 		p.sunAccum   = 0;
 		p.ageQD      = 0;
 		p.cdLeft     = 0;
 		// store the originating SeedType for later germination checks
 		Reflect.setField(p, "_seedType", seed);
 
-		z.plant = p;
-		return _backend.Futures.immediate();
+        z.plant = p;
+        return Future.immediate();
 	}
 }
 
@@ -218,30 +234,32 @@ class UpgradePlantEvent extends BaseWorldEvent {
 	public final zoneId:Int;
 	public final addHp:Int; // Very simple “fertiliser” upgrade
 
-	public function new(zoneId:Int, addHp:Int = 10)
-		this.zoneId = zoneId; this.addHp = addHp;
+    public function new(zoneId:Int, addHp:Int = 10) {
+        this.zoneId = zoneId;
+        this.addHp = addHp;
+    }
 
 	override public function changeWorld(w:World):Future {
 		var z = w.zones[zoneId];
-		if (z.plant == null || z.plant.state != Sprouted)
+        if (z.plant == null || z.plant.state != PlantState.Sprouted)
 			throw "No upgradeable plant on zone";
 
 		z.plant.hp += addHp;
 		if (z.plant.hp > z.plant.type.maxHp)
 			z.plant.hp = z.plant.type.maxHp;
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
 class RemovePlantEvent extends BaseWorldEvent {
 	public final zoneId:Int;
-	public function new(zoneId:Int) this.zoneId = zoneId;
+    public function new(zoneId:Int) { this.zoneId = zoneId; }
 
 	override public function changeWorld(w:World):Future {
 		var z = w.zones[zoneId];
-		if (z.plant == null) return _backend.Futures.immediate();
-		z.plant = null;
-		return _backend.Futures.immediate();
+        if (z.plant == null) return Future.immediate();
+        z.plant = null;
+        return Future.immediate();
 	}
 }
 
@@ -251,7 +269,7 @@ class RemovePlantEvent extends BaseWorldEvent {
 // ────────────────────────────────────────────────────────────────
 class InitiateCombatEvent extends BaseWorldEvent {
 	public final zoneId:Int;
-	public function new(zoneId:Int) this.zoneId = zoneId;
+    public function new(zoneId:Int) { this.zoneId = zoneId; }
 
 	override public function changeWorld(w:World):Future {
 		var z = w.zones[zoneId];
@@ -261,8 +279,8 @@ class InitiateCombatEvent extends BaseWorldEvent {
 		if (z.monsters.length == 0) throw "No monster to fight";
 
 		// Flag the monster as the current target (we just annotate)
-		Reflect.setField(z.monsters[0], "_inCombat", true);
-		return _backend.Futures.immediate();
+        Reflect.setField(z.monsters[0], "_inCombat", true);
+        return Future.immediate();
 	}
 }
 
@@ -304,7 +322,7 @@ class ExecuteAttackEvent extends BaseWorldEvent {
 			for (entry in m.type.loot)
 				if (Math.random() < entry.chance)
 					WorldTools.addMaterial(
-						w, entry.item, entry.min + Std.int(Math.random() * (entry.max - entry.min + 1)));
+						w, entry.item.id, entry.min + Std.int(Math.random() * (entry.max - entry.min + 1)));
 
 			z.monsters.remove(m);
 		}
@@ -314,18 +332,18 @@ class ExecuteAttackEvent extends BaseWorldEvent {
 		if (z.monsters.length > 0)
 			WorldEngine.enqueue(new MonsterTurnEvent(zoneId));
 
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
 
 /** Simple single-attack retaliation of the first monster. */
 class MonsterTurnEvent extends BaseWorldEvent {
 	public final zoneId:Int;
-	public function new(zoneId:Int) this.zoneId = zoneId;
+    public function new(zoneId:Int) { this.zoneId = zoneId; }
 
 	override public function changeWorld(w:World):Future {
 		var z = w.zones[zoneId];
-		if (!z.isHostile) return _backend.Futures.immediate();
+        if (!z.isHostile) return Future.immediate();
 
 		var mon = z.monsters[0];
 		var atk = mon.type.attacks[Std.random(mon.type.attacks.length)];
@@ -338,7 +356,7 @@ class MonsterTurnEvent extends BaseWorldEvent {
 		if (w.player.currentStats.hp <= 0)
 			throw "Player defeated!"; // Game over handler not part of backend demo
 
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
 
@@ -351,7 +369,7 @@ class EndCombatEvent extends BaseWorldEvent {
 		for (mon in z.monsters)
 			if (Reflect.hasField(mon, "_inCombat"))
 				Reflect.deleteField(mon, "_inCombat");
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
 
@@ -361,46 +379,46 @@ class EndCombatEvent extends BaseWorldEvent {
 class IncrementResourceEvent extends BaseWorldEvent {
 	public final t:ResourceType;
 	public final v:Int;
-	public function new(t, v) this.t = t; this.v = v;
+    public function new(t, v) { this.t = t; this.v = v; }
 
 	override public function changeWorld(w:World):Future {
 		WorldTools.addResource(w, t, v);
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
 class DecrementResourceEvent extends BaseWorldEvent {
 	public final t:ResourceType;
 	public final v:Int;
-	public function new(t, v) this.t = t; this.v = v;
+    public function new(t, v) { this.t = t; this.v = v; }
 
 	override public function changeWorld(w:World):Future {
 		if (!WorldTools.removeResource(w, t, v))
 			throw "Resource underflow";
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
 class GetMaterialEvent extends BaseWorldEvent {
 	public final mat:MaterialType;
 	public final amount:Int;
-	public function new(mat, amount) this.mat = mat; this.amount = amount;
+    public function new(mat, amount) { this.mat = mat; this.amount = amount; }
 
 	override public function changeWorld(w:World):Future {
 		WorldTools.addMaterial(w, mat, amount);
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
 class RemoveMaterialEvent extends BaseWorldEvent {
 	public final mat:MaterialType;
 	public final amount:Int;
-	public function new(mat, amount) this.mat = mat; this.amount = amount;
+    public function new(mat, amount) { this.mat = mat; this.amount = amount; }
 
 	override public function changeWorld(w:World):Future {
 		if (!WorldTools.removeMaterial(w, mat, amount))
 			throw "Material underflow";
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
@@ -409,12 +427,12 @@ class RemoveMaterialEvent extends BaseWorldEvent {
 // ────────────────────────────────────────────────────────────────
 class ActivateSkillTreeNodeEvent extends BaseWorldEvent {
 	public final nodeId:String;
-	public function new(nodeId) this.nodeId = nodeId;
+    public function new(nodeId) { this.nodeId = nodeId; }
 
 	override public function changeWorld(w:World):Future {
 		var node = w.player.skillTree.nodes.get(nodeId);
 		if (node == null) throw "Unknown node";
-		if (node.purchased) return _backend.Futures.immediate();
+        if (node.purchased) return Future.immediate();
 
 		if (w.player.skillTree.points < node.costPoints)
 			throw "Not enough skill points";
@@ -427,7 +445,7 @@ class ActivateSkillTreeNodeEvent extends BaseWorldEvent {
 		w.player.skillTree.points -= node.costPoints;
 		node.purchased = true;
 		w.player.refresh();
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
 
@@ -438,19 +456,21 @@ class CraftWeaponEvent extends BaseWorldEvent {
 	public final weaponType:WeaponType;
 	public final requiredMats:Map<MaterialType, Int>;
 
-	public function new(type:WeaponType, mats:Map<MaterialType, Int>)
-		this.weaponType = type; this.requiredMats = mats;
+    public function new(type:WeaponType, mats:Map<MaterialType, Int>) {
+        this.weaponType = type;
+        this.requiredMats = mats;
+    }
 
 	override public function changeWorld(w:World):Future {
 		// Pay materials
-		for (mat => amt in requiredMats)
-			if (!WorldTools.removeMaterial(w, mat, amt))
-				throw "Not enough material " + mat.id;
+			for (mat => amt in requiredMats)
+				if (!WorldTools.removeMaterial(w, mat, amt))
+					throw "Not enough material " + mat;
 
 		// Add new weapon to inventory (simply auto-equip in a free slot)
 		w.player.weaponSlots.push(new WeaponInstance(weaponType));
 		w.player.refresh();
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
 
@@ -458,8 +478,10 @@ class UpgradeWeaponEvent extends BaseWorldEvent {
 	public final slotIdx:Int;
 	public final mats:Map<MaterialType, Int>;
 
-	public function new(slotIdx, mats)
-		this.slotIdx = slotIdx; this.mats = mats;
+    public function new(slotIdx, mats) {
+        this.slotIdx = slotIdx;
+        this.mats = mats;
+    }
 
 	override public function changeWorld(w:World):Future {
 		if (slotIdx < 0 || slotIdx >= w.player.weaponSlots.length)
@@ -475,7 +497,7 @@ class UpgradeWeaponEvent extends BaseWorldEvent {
 
 		inst.level++;
 		w.player.refresh();
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
 
@@ -486,14 +508,14 @@ class SpawnMonsterEvent extends BaseWorldEvent {
 	public final zoneId:Int;
 	public final monsterType:MonsterType;
 
-	public function new(zoneId, mt) this.zoneId = zoneId; this.monsterType = mt;
+    public function new(zoneId, mt) { this.zoneId = zoneId; this.monsterType = mt; }
 
 	override public function changeWorld(w:World):Future {
 		var z = w.zones[zoneId];
 		if (z.monsters.length >= 3)
 			throw "Zone already full";
 		z.monsters.push(new Monster(monsterType, zoneId));
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
@@ -501,11 +523,11 @@ class RemoveMonsterEvent extends BaseWorldEvent {
 	public final zoneId:Int;
 	public final monster:Monster;
 
-	public function new(zoneId, m) this.zoneId = zoneId; this.monster = m;
+    public function new(zoneId, m) { this.zoneId = zoneId; this.monster = m; }
 
 	override public function changeWorld(w:World):Future {
 		w.zones[zoneId].monsters.remove(monster);
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
@@ -517,24 +539,26 @@ class InitiateRaidEvent extends BaseWorldEvent {
 	public final targetZone:Int;
 	public var monster:Monster; // filled during changeWorld()
 
-	public function new(fromZone:Int, targetZone:Int)
-		this.fromZone = fromZone; this.targetZone = targetZone;
+    public function new(fromZone:Int, targetZone:Int) {
+        this.fromZone = fromZone;
+        this.targetZone = targetZone;
+    }
 
 	override public function changeWorld(w:World):Future {
 		monster = w.zones[fromZone].monsters[1]; // 2nd monster = “overflow”
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
 class ExecuteRaidEvent extends BaseWorldEvent {
 	public final raid:InitiateRaidEvent;
-	public function new(raid) this.raid = raid;
+    public function new(raid) { this.raid = raid; }
 
 	override public function changeWorld(w:World):Future {
-		var z = raid.raid.targetZone;
-		var targetZ = raid.raid.world.zones[z]; // (pseudo – just outline)
+		var z = raid.targetZone;
+		var targetZ = w.zones[z];
 		var p = targetZ.plant;
-		if (p == null) return _backend.Futures.immediate();
+        if (p == null) return Future.immediate();
 
 		// Single hit = monster type's first attack damage
 		var dmg = raid.monster.type.attacks[0].damage;
@@ -546,15 +570,15 @@ class ExecuteRaidEvent extends BaseWorldEvent {
 			targetZ.monsters.push(raid.monster);
 			raid.monster.zoneId = targetZ.id;
 			// remove from original zone
-			raid.raid.world.zones[raid.fromZone].monsters.remove(raid.monster);
+			w.zones[raid.fromZone].monsters.remove(raid.monster);
 		}
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
 
 class EndRaidEvent extends BaseWorldEvent {
-	override public function changeWorld(w:World):Future
-		return _backend.Futures.immediate(); // nothing extra, just placeholder
+    override public function changeWorld(w:World):Future
+        return Future.immediate(); // nothing extra, just placeholder
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -564,12 +588,12 @@ class DayAdvanceEvent extends BaseWorldEvent {
 	override public function changeWorld(w:World):Future {
 		// 1. Quarter -> next
 		w.quarter = switch (w.quarter) {
-			case OccindentalRising: Occindental;
-			case Occindental:       OrientalRising;
-			case OrientalRising:    Oriental;
-			case Oriental:
+			case Quarter.OccindentalRising: Quarter.Occindental;
+			case Quarter.Occindental:       Quarter.OrientalRising;
+			case Quarter.OrientalRising:    Quarter.Oriental;
+			case Quarter.Oriental:
 				w.dayCount++;
-				OccindentalRising;
+				Quarter.OccindentalRising;
 		}
 
 		// 2. Handle world simulation on each zone
@@ -585,8 +609,8 @@ class DayAdvanceEvent extends BaseWorldEvent {
 				WorldEngine.enqueue(new SpawnMonsterEvent(z.id, z.monsters[0].type)); // reuse same monster type
 
 			// 2.3 Plant ageing / germination
-			if (z.plant != null)
-				handlePlantQuarter(z, w);
+				if (z.plant != null)
+                handlePlantQuarter(z, w);
 		}
 
 		// 3. Give the player the new “seed card pack”
@@ -594,7 +618,7 @@ class DayAdvanceEvent extends BaseWorldEvent {
 		for (s in pulls)
 			WorldTools.addSeed(w, s, 1);
 
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 
 	static function handlePlantQuarter(z:TriZone, w:World) {
@@ -602,23 +626,23 @@ class DayAdvanceEvent extends BaseWorldEvent {
 		p.ageQD++;
 
 		switch (p.state) {
-			case Seed:
+            case PlantState.Seed:
 				var seed:SeedType = cast Reflect.field(p, "_seedType");
 				p.sunAccum++;
 
 				// Germination check
-				if (p.sunAccum >= seed.sunNeeded && p.ageQD >= seed.germTimeQD)
-					p.state = Sprouted;
-			case Sprouted:
+		if (p.sunAccum >= seed.sunNeeded && p.ageQD >= seed.germTimeQD)
+					p.state = PlantState.Sprouted;
+            case PlantState.Sprouted:
 				// OnDayTick effect only triggers at end of day
-				if (w.quarter == Oriental && p.type.effect != null
-					&& p.type.effect.kind == OnDayTick)
+				if (w.quarter == Quarter.Oriental && p.type.effect != null
+					&& p.type.effect.kind == PlantEffectKind.OnDayTick)
 					for (rt => amt in p.type.effect.payload)
-						WorldTools.addResource(w, rt, amt);
+                        WorldTools.addResource(w, rt, amt);
 
 				// Cool-down reduction
 				if (p.cdLeft > 0) p.cdLeft--;
-			case Dead:
+            case PlantState.Dead:
 				// Nothing
 		}
 	}
@@ -630,11 +654,11 @@ class DayAdvanceEvent extends BaseWorldEvent {
 class ChangeWeatherEvent extends BaseWorldEvent {
 	public final zoneId:Int;
 	public final weather:WeatherType;
-	public function new(zoneId, w) this.zoneId = zoneId; this.weather = w;
+    public function new(zoneId, w) { this.zoneId = zoneId; this.weather = w; }
 
 	override public function changeWorld(w:World):Future {
 		w.zones[zoneId].env.currentWeather = weather;
-		return _backend.Futures.immediate();
+		return Future.immediate();
 	}
 }
 
@@ -643,13 +667,16 @@ class ChangeHeatVarianceEvent extends BaseWorldEvent {
 	public final base:Float;
 	public final variance:Float;
 
-	public function new(zoneId, base, variance)
-		this.zoneId = zoneId; this.base = base; this.variance = variance;
+    public function new(zoneId, base, variance) {
+        this.zoneId = zoneId;
+        this.base = base;
+        this.variance = variance;
+    }
 
 	override public function changeWorld(w:World):Future {
 		var env = w.zones[zoneId].env;
 		env.baseHeat      = base;
 		env.dailyVariance = variance;
-		return _backend.Futures.immediate();
+        return Future.immediate();
 	}
 }
