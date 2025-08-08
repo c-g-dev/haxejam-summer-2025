@@ -17,7 +17,7 @@ class Planet extends h3d.scene.Object {
     var labels: Array<{pos: h3d.Vector, text: h2d.Text}> = [];
     var newVerts: Array<h3d.Vector>;
     var subFaces: Array<Array<Int>>;
-    var adjMap: Map<Int, Array<Int>>;
+    public var adjMap: Map<Int, Array<Int>>;
 
     public var cameraMover: PlanetCamera;
 

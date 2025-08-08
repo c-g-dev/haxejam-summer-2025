@@ -8,7 +8,8 @@
 -lib heaps-coroutine
 -lib no-spoon
 -lib utest
+-lib deepnightLibs
 
 -hl build.hl
 
--main engine.EventTests
+-main UITestMain

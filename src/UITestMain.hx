@@ -1,24 +1,16 @@
-import effects.FXAA.FXAAFilter;
-import ui.ScrollListView;
+import state.HState.HStateManager;
+import state.StartMenuState;
+
 
 class UITestMain extends hxd.App {
 
-    var scrollList: ScrollListView;
-
     override function init() {
         hxd.Res.initEmbed();
-        
-        scrollList = new ScrollListView(350, 250);
-        s2d.addChild(scrollList);
 
-        scrollList.addItem("Item 1");
-        scrollList.addItem("Item 2");
-        scrollList.addItem("Item 3");
-        scrollList.addItem("Item 4");
-        scrollList.addItem("Item 5");
-        scrollList.addItem("Item 6");
-        scrollList.addItem("Item 7");
-        scrollList.addItem("Item 8");
+        HStateManager.app = this;
+       
+        var startMenu = new StartMenuState();
+        HStateManager.setState(startMenu);
 
         
         /*
@@ -30,7 +22,11 @@ class UITestMain extends hxd.App {
         text.scaleX = 0.5;
         text.scaleY = 0.5;
         */
-        s2d.filter = new FXAAFilter();
+        //s2d.filter = new FXAAFilter();
+    }
+
+    override function update(dt:Float) {
+        HStateManager.update(dt);
     }
 
     public static function main() {

@@ -1,5 +1,7 @@
-package engine.impl;
+package engine;
 
+import data.Data.AttackDef;
+import data.Data.SeedPool;
 import heaps.coroutine.Future;
 
 import data.Data.World;
@@ -21,6 +23,7 @@ import data.Data.WeaponInstance;
 import data.Data.Stats;
 import data.Data.Monster;
 import data.Data.MonsterType;
+import engine.WorldEngine.IWorldEvent;
 
 class WorldTools {
 	public static inline function addResource(w:World, t:ResourceType, v:Int) {
@@ -96,31 +99,25 @@ class PlantService {
 }
 
 class ZoneService {
-	/**
-	 * Returns the actions that are theoretically possible for the
-	 * player on *this* trizone right now.  Purely informational; does
-	 * NOT check resource availability (that part belongs into the UI).
-	 */
+
 	public static function getPlayerActionsOnZone(z:TriZone, world:World):Array<String> {
 		var out = new Array<String>();
 
 		if (!z.isHostile) {
 			if (z.plant == null)
-				out.push("plant_seed");
+				out.push("Plant Seed");
 			else {
-				out.push("remove_plant");
+				out.push("Remove Plant");
                 if (z.plant.state == PlantState.Sprouted && z.plant.type.effect != null
                     && z.plant.type.effect.kind == PlantEffectKind.Activatable && z.plant.cdLeft <= 0)
-					out.push("use_plant_effect");
+					out.push("Use Plant Effect");
 			}
 		}
 
-		// If the zone is friendly but adjacent to a hostile zone, let
-		// the player initiate combat.
 		if (!z.isHostile) {
 			for (nid in z.neighbours)
 				if (world.zones[nid].isHostile) {
-					out.push("initiate_combat");
+					out.push("Attack");
 					break;
 				}
 		}
@@ -310,7 +307,7 @@ class ExecuteAttackEvent extends BaseWorldEvent {
 		// 2. Pay costs
 		for (type => cost in atk.cost)
 			if (!WorldTools.removeResource(w, type, cost))
-				throw "Not enough " + type.toString();
+				throw "Not enough " + Std.string(type);
 
 		// 3. Calculate damage
 		var dmg = atk.damage + w.player.currentStats.power - m.type.defense;
@@ -620,6 +617,8 @@ class DayAdvanceEvent extends BaseWorldEvent {
 
 		return Future.immediate();
 	}
+
+	public function new() {}
 
 	static function handlePlantQuarter(z:TriZone, w:World) {
 		var p = z.plant;

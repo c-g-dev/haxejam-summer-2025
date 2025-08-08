@@ -1,5 +1,8 @@
 package ui;
 
+import h2d.Object;
+import hxd.Key;
+import ludi.heaps.Node;
 
 interface IArrowNavInputProvider {
 	function isUpPressed():Bool;

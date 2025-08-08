@@ -18,11 +18,10 @@ enum abstract ResourceType(Int) {
 }
 
 enum abstract SoilType(Int) {
-	var Sandy = 0;
-	var Loamy = 1;
-	var Clay = 2;
-	var Peat = 3;
-	var Silt = 4;
+	var Poor = 0;
+    var Fertile = 1;
+    var Sand = 2;
+    var Water = 3;
 }
 
 enum abstract WeatherType(Int) {
@@ -94,7 +93,7 @@ class Environment {
 	public var baseHeat:Float = 0; // Average °C
 	public var dailyVariance:Float = 0; // How much it swings each day
 	public var waterLevel:Float = 0; // 0-1
-	public var soil:SoilType = Sandy;
+	public var soil:SoilType = Sand;
 	public var materialYield:Array<Chance<Material>>;
 	public var weatherPattern:Array<WeatherType> = []; // e.g. 16 values per day
 	public var currentWeather:WeatherType = Clear;

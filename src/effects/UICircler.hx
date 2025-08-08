@@ -1,13 +1,12 @@
 package effects;
 
-// ui/UICircler.hx
-package ui;
 
+import heaps.coroutine.Parallel;
+import heaps.coroutine.Coro;
+import heaps.coroutine.Coroutine;
+import heaps.coroutine.Future;
 import h2d.Object;
-import h2d.Ease;
 import h2d.Scene;
-import h2d.Tween;     // Heaps built-in tween helper
-import haxe.ds.ArrayIterator;
 
 class UICircler extends Object {
 	/**
@@ -20,10 +19,6 @@ class UICircler extends Object {
 	 */
 	public var duration : Float = 0.35;
 
-	/**
-	 * Easing function used for the tween.
-	 */
-	public var ease : Ease = Ease.quadOut;
 
 	/**
 	 * Internal storage of children + their final scale.
@@ -65,25 +60,31 @@ class UICircler extends Object {
 			var ty = Math.sin(angle) * radius;
 
 
-            coros.push(Coro.defer((ctx) -> {
-                if(ctx.dt >= duration) {
+            coros.push(Coro.defer((ctx: CoroutineContext) -> {
+                if(ctx.elapsed >= duration) {
                     item.obj.x = tx;
                     item.obj.y = ty;
                     item.obj.scaleX = item.targetScale;
                     item.obj.scaleY = item.targetScale;
                     return Stop;
                 }
-                var currentRadius = ctx.dt / duration * radius;
+				var t = ctx.elapsed / duration; 
+				var easing = 1 - Math.pow(2, -10 * t);
+                var currentRadius = easing * radius;
                 item.obj.x = Math.cos(angle) * currentRadius;
                 item.obj.y = Math.sin(angle) * currentRadius;
-                item.obj.scaleX = item.targetScale * ctx.dt / duration;
-                item.obj.scaleY = item.targetScale * ctx.dt / duration;
+
+	
+				item.obj.scaleX = item.targetScale * easing;
+				item.obj.scaleY = item.targetScale * easing;
                 return WaitNextFrame;
             }));
 		}
 
-        return new Parallel(coros).future();
-	}
+		var parallel = new Parallel(coros);
+		parallel.start();
+        return parallel.future;
+    }
 
 	public function reset( withScale:Bool = true ) {
 		for (item in items) {

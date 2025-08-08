@@ -1,5 +1,13 @@
 package engine;
 
+import engine.EventImpl.ActivateSkillTreeNodeEvent;
+import engine.EventImpl.ExecuteAttackEvent;
+import engine.EventImpl.InitiateCombatEvent;
+import engine.EventImpl.DayAdvanceEvent;
+import engine.EventImpl.PlantSeedEvent;
+import engine.EventImpl.DecrementResourceEvent;
+import engine.EventImpl.IncrementResourceEvent;
+import engine.EventImpl.WorldTools;
 import utest.Assert;
 import utest.Test;
 
@@ -21,12 +29,12 @@ import data.Data.PlantState;
 import data.Data.AttackDef;
 import data.Data.TriZone;
 
-import engine.Events.*;
-import engine.impl.EventImpl.WorldTools;
+import engine.WorldEngine;
+
 
 using Lambda;
 
-class EngineTest extends Test {
+class EventTests extends Test {
 	// Shared test-fixture objects
 	var world:World;
 	var seedT:SeedType;
@@ -207,15 +215,11 @@ class EngineTest extends Test {
 		n.effect        = s -> s.hp += 10;
 		return n;
 	}
-}
 
-// ────────────────────────────────────────────────────────────────
-//  Entry point for neko / node / cpp tests
-// ────────────────────────────────────────────────────────────────
-class TestMain {
 	static function main() {
 		utest.UTest.run([
-			new EngineTest()
+			new EventTests()
 		]);
 	}
 }
+

@@ -35,6 +35,7 @@ abstract class HState {
         }
         if (substate != null) {
             substate.update(dt);
+            return;
         }
         else {
             onUpdate(dt);

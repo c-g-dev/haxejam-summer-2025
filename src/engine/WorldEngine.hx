@@ -23,7 +23,7 @@ class WorldEngine {
         if(isProcessing) return;
         isProcessing = true;
         var event = queue.shift();
-        event.changeWorld(world).then(() -> {
+        event.changeWorld(world).then((_) -> {
             if(queue.length > 0) {
                 processEvents();
             } else {

@@ -1,6 +1,7 @@
 package ui;
 
 import ui.Nav.ArrowNav;
+import ui.Nav.ArrowNavEvent;
 import ludi.heaps.box.Plugins.BackgroundColorPlugin;
 import ludi.heaps.box.Plugins.BackgroundPlugin;
 import ludi.heaps.box.Plugins.VerticalGradientPlugin;
@@ -65,18 +66,21 @@ class ScrollListView extends h2d.Object {
         
         this.addChild(container);
 
-
+        // initialize navigation
+        nav = new ArrowNav();
     }
 
     public function addItem(text:String) {
         var item = new ScrollListItem(text);
         scrollbox.addChild(item);
-        nav.bind(item, function(event) {
+        nav.bind(item, function(event:ArrowNavEvent) {
             switch(event) {
                 case Enter:
                     item.setSelected(true);
                 case Leave:
                     item.setSelected(false);
+                case Selected:
+                    // no-op for the generic list view
             }
         });
     }
