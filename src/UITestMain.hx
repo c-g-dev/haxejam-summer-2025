@@ -1,10 +1,15 @@
+import h2d.filter.Glow;
+import hxd.Window;
+import effects.Lightning;
 import state.HState.HStateManager;
 import state.StartMenuState;
+import state.CombatState;
 
 
 class UITestMain extends hxd.App {
 
     var stars: space.Stars;
+    var lightning: Lightning;
 
     override function init() {
         hxd.Res.initEmbed();
@@ -12,13 +17,20 @@ class UITestMain extends hxd.App {
        HStateManager.app = this;
           
        
-       var startMenu = new StartMenuState();
-        HStateManager.setState(startMenu);
+     //  var startMenu = new CombatState();
+      //  HStateManager.setState(startMenu);
+    
+        lightning = new Lightning(s2d, 0, 0, Window.getInstance().width, Window.getInstance().height);
+
+        var glow = new Glow(12, 0x66CCFF, 1);
+        @:privateAccess lightning.gfx.filter = glow;
+       
 
     }
 
     override function update(dt:Float) {
        HStateManager.update(dt);
+       if(lightning != null) lightning.update(dt);
     }
 
     public static function main() {
