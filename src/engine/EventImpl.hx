@@ -12,7 +12,6 @@ import data.Data.Quarter;
 import data.Data.WeatherType;
 import data.Data.Rarity;
 import data.Data.Range;
-import data.Data.SeedType;
 import data.Data.PlantType;
 import data.Data.PlantInstance;
 import data.Data.PlantState;
@@ -52,12 +51,12 @@ class WorldTools {
 		return true;
 	}
 
-	public static inline function addSeed(w:World, s:SeedType, v:Int) {
+    public static inline function addSeed(w:World, s:PlantType, v:Int) {
 		var m = w.inventory.seeds;
 		m.set(s, (m.exists(s) ? m.get(s) : 0) + v);
 	}
 
-	public static inline function removeSeed(w:World, s:SeedType, v:Int):Bool {
+    public static inline function removeSeed(w:World, s:PlantType, v:Int):Bool {
 		var m = w.inventory.seeds;
 		var cur = m.exists(s) ? m.get(s) : 0;
 		if (cur < v) return false;
@@ -70,28 +69,28 @@ class WorldTools {
 //  Services (pure query helpers – *no mutation here!*)
 // ────────────────────────────────────────────────────────────────
 class PlantService {
-	/** Can this seed be planted **right now** on that zone? */
-	public static function canPlant(seed:SeedType, zone:TriZone, world:World):Bool {
+    /** Can this plant type be planted as a seed right now on that zone? */
+    public static function canPlant(plant:PlantType, zone:TriZone, world:World):Bool {
 		// 1. zone free and non-hostile
 		if (zone.plant != null) return false;
 		if (zone.isHostile) return false;
 
 		// 2. Soil check
-		if (seed.soilWhitelist != null && seed.soilWhitelist.length > 0)
-			if (!Lambda.exists(seed.soilWhitelist, s -> s == zone.env.soil))
+        if (plant.soilWhitelist != null && plant.soilWhitelist.length > 0)
+            if (!Lambda.exists(plant.soilWhitelist, s -> s == zone.env.soil))
 				return false;
 
 		// 3. Immediate env. checks – we’ll take *current* heat / water
 		var heat = zone.env.baseHeat; // you might want to add variance here
-		if (heat < seed.heatReq.min || heat > seed.heatReq.max)
+        if (heat < plant.heatReq.min || heat > plant.heatReq.max)
 			return false;
 
 		var water = zone.env.waterLevel;
-		if (water < seed.waterReq.min || water > seed.waterReq.max)
+        if (water < plant.waterReq.min || water > plant.waterReq.max)
 			return false;
 
 		// 4. Player owns the seed?
-		var owned = world.inventory.seeds.exists(seed) ? world.inventory.seeds.get(seed) : 0;
+        var owned = world.inventory.seeds.exists(plant) ? world.inventory.seeds.get(plant) : 0;
 		if (owned <= 0) return false;
 
 		return true;
@@ -135,16 +134,16 @@ class RandomService {
 			case Legendary:    1;
 		}
 
-	/** Roll **exactly 3** random seeds the player may choose from */
-	public static function rollSeedPulls(pool:SeedPool):Array<SeedType> {
-		var picks = new Array<SeedType>();
+    /** Roll exactly 3 random plant types the player may choose from */
+    public static function rollSeedPulls(pool:SeedPool):Array<PlantType> {
+        var picks = new Array<PlantType>();
 		if (pool.catalog == null || pool.catalog.length == 0) return picks;
 
 		// Build cumulative weights
 		var cum:Array<Float> = [];
 		var total = 0.0;
-		for (s in pool.catalog) {
-			total += weightForRarity(s.rarity);
+        for (p in pool.catalog) {
+            total += weightForRarity(p.rarity);
 			cum.push(total);
 		}
 
@@ -197,30 +196,28 @@ class BaseWorldEvent implements IWorldEvent {
 // ────────────────────────────────────────────────────────────────
 class PlantSeedEvent extends BaseWorldEvent {
 	public final zoneId:Int;
-	public final seed:SeedType;
+    public final plant:PlantType;
 
-	public function new(zoneId:Int, seed:SeedType) {
-		this.zoneId = zoneId;
-		this.seed   = seed;
+    public function new(zoneId:Int, plant:PlantType) {
+        this.zoneId = zoneId;
+        this.plant   = plant;
 	}
 
 	override public function changeWorld(w:World):Future {
 		var z = w.zones[zoneId];
-		if (!PlantService.canPlant(seed, z, w))
-			throw "Cannot plant " + seed.id + " on zone #" + zoneId;
+        if (!PlantService.canPlant(plant, z, w))
+            throw "Cannot plant " + plant.id + " on zone #" + zoneId;
 
 		// 1. Consume the seed item
-		if (!WorldTools.removeSeed(w, seed, 1))
+        if (!WorldTools.removeSeed(w, plant, 1))
 			throw "Seed missing in inventory";
 
 		// 2. Instantiate the plant (still in Seed state)
-		var p = new PlantInstance(seed.resultPlant, zoneId);
+        var p = new PlantInstance(plant, zoneId);
         p.state      = PlantState.Seed;
 		p.sunAccum   = 0;
 		p.ageQD      = 0;
 		p.cdLeft     = 0;
-		// store the originating SeedType for later germination checks
-		Reflect.setField(p, "_seedType", seed);
 
         z.plant = p;
         return Future.immediate();
@@ -610,27 +607,26 @@ class DayAdvanceEvent extends BaseWorldEvent {
                 handlePlantQuarter(z, w);
 		}
 
-		// 3. Give the player the new “seed card pack”
-		var pulls = RandomService.rollSeedPulls(w.seedPool);
-		for (s in pulls)
-			WorldTools.addSeed(w, s, 1);
+        // 3. Give the player the new “seed card pack”
+        var pulls = RandomService.rollSeedPulls(w.seedPool);
+        for (p in pulls)
+            WorldTools.addSeed(w, p, 1);
 
 		return Future.immediate();
 	}
 
 	public function new() {}
 
-	static function handlePlantQuarter(z:TriZone, w:World) {
+    static function handlePlantQuarter(z:TriZone, w:World) {
 		var p = z.plant;
 		p.ageQD++;
 
 		switch (p.state) {
             case PlantState.Seed:
-				var seed:SeedType = cast Reflect.field(p, "_seedType");
 				p.sunAccum++;
 
 				// Germination check
-		if (p.sunAccum >= seed.sunNeeded && p.ageQD >= seed.germTimeQD)
+                if (p.sunAccum >= p.type.sunNeeded && p.ageQD >= p.type.germTimeQD)
 					p.state = PlantState.Sprouted;
             case PlantState.Sprouted:
 				// OnDayTick effect only triggers at end of day

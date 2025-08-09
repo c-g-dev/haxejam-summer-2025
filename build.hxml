@@ -10,6 +10,8 @@
 -lib utest
 -lib deepnightLibs
 
+-D windowSize=1280x720
+
 -hl build.hl
 
 -main UITestMain

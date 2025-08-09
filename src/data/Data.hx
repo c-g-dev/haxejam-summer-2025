@@ -102,31 +102,21 @@ class Environment {
 }
 
 // ──────────────────────────────────────────────────────
-// 4.  SEEDS, PLANTS & THEIR INSTANCES
+// 4.  PLANTS (TYPE) & INSTANCES
 // ──────────────────────────────────────────────────────
-class SeedType {
-	public var id:String;
-	public var name:String;
-	public var rarity:Rarity;
-
-	// Germination requirements
-	public var heatReq:Range;
-	public var waterReq:Range;
-	public var soilWhitelist:Array<SoilType>;
-	public var sunNeeded:Int; // Sun points consumed while still a seed
-	public var germTimeQD:Int; // Quarter-days before sprouting
-
-	public var resultPlant:PlantType; // What this seed becomes
-
-	public function new(id:String)
-		this.id = id;
-}
-
 class PlantType {
 	public var id:String;
 	public var name:String;
 	public var maxHp:Int;
 	public var effect:PlantEffect; // Automatic or activatable
+
+    // Former SeedType properties: planting/germination requirements
+    public var rarity:Rarity;
+    public var heatReq:Range;
+    public var waterReq:Range;
+    public var soilWhitelist:Array<SoilType>;
+    public var sunNeeded:Int;   // Sun points consumed while in Seed state
+    public var germTimeQD:Int;  // Quarter-days before sprouting
 
 	public function new(id:String)
 		this.id = id;
@@ -343,7 +333,7 @@ class SkillTree {
 class Inventory {
 	public var resources:ResourceBundle = new Map();
 	public var materials:Map<MaterialType, Int> = new Map();
-	public var seeds:Map<SeedType, Int> = new Map();
+    public var seeds:Map<PlantType, Int> = new Map();
 
 	public function new() {}
 }
@@ -352,7 +342,7 @@ class Inventory {
 // 9.  SEED POOL (THE “CARD PACK” EACH QUARTER‐DAY)
 // ──────────────────────────────────────────────────────
 class SeedPool {
-	public var catalog:Array<SeedType>; // All possible seeds
+    public var catalog:Array<PlantType>; // All possible plant types (as seeds)
 
 	public function new() {}
 }

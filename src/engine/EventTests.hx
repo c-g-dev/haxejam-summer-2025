@@ -12,7 +12,6 @@ import utest.Assert;
 import utest.Test;
 
 import data.Data.World;
-import data.Data.SeedType;
 import data.Data.PlantType;
 import data.Data.WeaponType;
 import data.Data.MonsterType;
@@ -37,7 +36,7 @@ using Lambda;
 class EventTests extends Test {
 	// Shared test-fixture objects
 	var world:World;
-	var seedT:SeedType;
+    var seedT:PlantType;
 	var plantT:PlantType;
 	var weaponT:WeaponType;
 	var monsterT:MonsterType;
@@ -56,8 +55,8 @@ class EventTests extends Test {
 	//  1.  Successful planting
 	// ──────────────────────────────────────────────────────────
 	function testPlantSeedSuccess() {
-		WorldTools.addSeed(world, seedT, 1);
-		WorldEngine.enqueue(new PlantSeedEvent(0, seedT));
+        WorldTools.addSeed(world, seedT, 1);
+        WorldEngine.enqueue(new PlantSeedEvent(0, seedT));
 
 		Assert.notNull(world.zones[0].plant);
 		Assert.equals(0, world.inventory.seeds.get(seedT));
@@ -68,7 +67,7 @@ class EventTests extends Test {
 	// ──────────────────────────────────────────────────────────
 	function testPlantSeedWrongSoil() {
 		// change soil on zone #1 so whitelist check fails
-		world.zones[1].env.soil = SoilType.Sandy;
+        world.zones[1].env.soil = SoilType.Sand;
 		WorldTools.addSeed(world, seedT, 1);
 
 		Assert.raises(
@@ -80,8 +79,8 @@ class EventTests extends Test {
 	//  3.  Germination after 2 quarter-days
 	// ──────────────────────────────────────────────────────────
 	function testGermination() {
-		WorldTools.addSeed(world, seedT, 1);
-		WorldEngine.enqueue(new PlantSeedEvent(0, seedT));
+        WorldTools.addSeed(world, seedT, 1);
+        WorldEngine.enqueue(new PlantSeedEvent(0, seedT));
 
 		for (i in 0...2)
 			WorldEngine.enqueue(new DayAdvanceEvent());
@@ -142,22 +141,20 @@ class EventTests extends Test {
 		var w = new World();
 
 		// ──────────────  dummy catalogue / data  ──────────────
-		plantT = new PlantType("basicPlant");
-		plantT.name   = "Basic Plant";
-		plantT.maxHp  = 10;
-		plantT.effect = null;
+        seedT = new PlantType("basicPlant");
+        seedT.name           = "Basic Plant";
+        seedT.maxHp          = 10;
+        seedT.effect         = null;
+        seedT.rarity         = Rarity.Common;
+        seedT.heatReq        = {min:0, max:40};
+        seedT.waterReq       = {min:0, max:1};
+        seedT.soilWhitelist  = [SoilType.Loamy];
+        seedT.sunNeeded      = 2;
+        seedT.germTimeQD     = 2;
 
-		seedT = new SeedType("basicSeed");
-		seedT.name           = "Basic Seed";
-		seedT.rarity         = Rarity.Common;
-		seedT.heatReq        = {min:0, max:40};
-		seedT.waterReq       = {min:0, max:1};
-		seedT.soilWhitelist  = [SoilType.Loamy];
-		seedT.sunNeeded      = 2;
-		seedT.germTimeQD     = 2;
-		seedT.resultPlant    = plantT;
+        plantT = seedT;
 
-		w.seedPool.catalog = [seedT];
+        w.seedPool.catalog = [seedT];
 
 		var attack = new AttackDef();
 		attack.id     = "shoot";
@@ -196,7 +193,7 @@ class EventTests extends Test {
 		// ────────────── 80 trivial zones  ──────────────
 		for (i in 0...80) {
 			var z = new TriZone(i);
-			z.env.soil        = SoilType.Loamy;
+            z.env.soil        = SoilType.Fertile;
 			z.env.baseHeat    = 20;
 			z.env.waterLevel  = 0.5;
 			w.zones.push(z);

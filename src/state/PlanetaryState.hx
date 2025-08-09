@@ -16,6 +16,11 @@ import ui.SeedListView;
 import engine.EventImpl.ZoneService;
 import engine.Game;
 import engine.WorldEngine;
+import state.planetary.SelectSeedSubstate;
+import space.SpaceEffects;
+import space.Stars;
+import ludi.heaps.form.controls.FormButton;
+import ludi.heaps.box.Box;
 
 enum PlanetaryMode {
     Idle;
@@ -31,6 +36,8 @@ class PlanetaryState extends HState {
     var dirLight: DirLight;
     var overlay: MechSpriteOverlay;
     var input: PlanetaryStateControls;
+    var effects: SpaceEffects;
+    var stars: Stars;
 
     var currentTri: Int = 0;
     var mode: PlanetaryMode = Idle;
@@ -40,8 +47,11 @@ class PlanetaryState extends HState {
     var menuNav: ArrowNav;
     var menuChoices: Array<WorldActionChoice>;
 
-    // Seed list UI (debug/inventory)
+    // Seed list UI (debug/inventory)debug
     var seedList: SeedListView;
+    // Cache of adjacents for current tri to avoid rebuilding arrays
+    var currentAdjacents: Array<Int> = [];
+    var rotateButton: Box;
 
     function setup(): Void {
         input = new PlanetaryStateControls();
@@ -55,9 +65,12 @@ class PlanetaryState extends HState {
         dirLight = new DirLight(new h3d.Vector(0.5, 0.5, -0.5), this.app.s3d);
         dirLight.enableSpecular = true;
 
+        // Background sky dome
+        stars = new Stars(this.app.s3d, this.app.s3d.camera);
+
         planet = new Planet(this.app.s3d, this.app.s2d, this.app.s3d.camera);
 
-        this.app.s3d.camera.pos.set(0, 0, 5);
+        this.app.s3d.camera.pos.set(0, 0, 5); 
         this.app.s3d.camera.target.set(0, 0, 0);
 
         sun = new Sun(this.app.s3d);
@@ -65,11 +78,28 @@ class PlanetaryState extends HState {
         overlay = new MechSpriteOverlay(planet);
         this.app.s2d.addChild(overlay);
 
+        effects = new SpaceEffects(planet);
+
+        // Bottom-right rotate button
+        rotateButton = new FormButton("Rotate 90°");
+        this.app.s2d.addChild(rotateButton);
+        positionRotateButton();
+        rotateButton.onClick((_) -> {
+            if (mode == WaitingEffect || mode == CameraPanning || mode == MenusOpen) return;
+            mode = WaitingEffect;
+            effects.rotatePlanetQuarterTurn().then((_) -> {
+                mode = Idle;
+            });
+        });
+
         // Create seed list UI docked on right side
         seedList = new SeedListView(360, this.app.s2d.height);
         seedList.x = this.app.s2d.width - seedList.totalWidth;
         seedList.y = 0;
-        this.app.s2d.addChild(seedList);
+     //   this.app.s2d.addChild(seedList);
+
+        // Initial overlay paint
+        refreshTriZoneOverlays();
     }
 
     public function lifecycle(e:HStateLifeCycle):Future<Dynamic> {
@@ -87,9 +117,17 @@ class PlanetaryState extends HState {
                 return Future.immediate();
             }
             case Destroy: {
+                if (stars != null) {
+                    this.app.s3d.removeChild(stars);
+                    stars = null;
+                }
                 if (overlay != null) {
                     this.app.s2d.removeChild(overlay);
                     overlay = null;
+                }
+                if (rotateButton != null) {
+                    this.app.s2d.removeChild(rotateButton);
+                    rotateButton = null;
                 }
                 if (seedList != null) {
                     this.app.s2d.removeChild(seedList);
@@ -177,6 +215,9 @@ class PlanetaryState extends HState {
             choice.onSelected = () -> {
                 trace('Selected action: ' + lbl + ' on zone #' + zoneId);
                 closeActionMenu();
+                if (lbl == "Plant Seed") {
+                    this.openSubState(new SelectSeedSubstate(zoneId));
+                }
             };
             menuChoices.push(choice);
             menuCircler.addItem(choice, 1);
@@ -211,6 +252,7 @@ class PlanetaryState extends HState {
 
     public function onUpdate(dt:Float):Void {
         if (planet == null) return;
+        if (rotateButton != null) positionRotateButton();
 
         if (mode == Idle) {
             if (input.isActionPressed()) {
@@ -224,6 +266,8 @@ class PlanetaryState extends HState {
                         mode = CameraPanning;
                         planet.cameraMover.moveToTriangle(currentTri, 2).then((_) -> {
                             mode = Idle;
+                            // After camera move completes, refresh overlays
+                            refreshTriZoneOverlays();
                         });
                     }
                 }
@@ -240,6 +284,59 @@ class PlanetaryState extends HState {
         planet.updateLabels(this.app.s3d.camera, this.app.s2d);
 
         if (seedList != null) seedList.update(dt);
+
+        // Sky follows camera in its own sync
+
+        // Update tints/highlights each frame in case world changes or selection moved
+        refreshTriZoneOverlays();
+    }
+
+    // Recompute hostile red fills and friendly-adjacent glow from currentTri
+    function refreshTriZoneOverlays(): Void {
+        if (planet == null) return;
+        var world = Game.world;
+        if (world == null || world.zones == null || world.zones.length == 0) return;
+
+        // Clear all overlays first
+        planet.clearTriOverlays();
+
+        // 1) Hostile zones -> solid/semi-transparent red fill
+        // 2) Friendly adjacent to currentTri -> soft glow
+        // Note: use labels length as authoritative number of trizones drawn on sphere
+        var total = world.zones.length;
+        if (total > 80) total = 80; // safety; sphere has 80 subfaces
+
+        // Mark hostile across all indices
+        for (i in 0...total) {
+            var z = world.zones[i];
+            if (z != null && z.isHostile) {
+                // Red with some transparency so base texture shows through
+                planet.colorTriOverlay(i, 1.0, 0.0, 0.0, 0.35);
+            }
+        }
+
+        // Friendly-adjacent glow: neighbors of currentTri that are not hostile
+        currentAdjacents = planet.adjMap.get(currentTri);
+        if (currentAdjacents != null) {
+            for (nid in currentAdjacents) {
+                if (nid < 0 || nid >= total) continue;
+                var nz = world.zones[nid];
+                if (nz == null || nz.isHostile) continue;
+                // Soft light blue-ish glow, add on top of any red? No: red means hostile, skip
+                planet.colorTriOverlay(nid, 0.4, 0.8, 1.0, 0.25);
+            }
+        }
+
+        // Highlight current triangle subtly for verification
+        if (currentTri >= 0 && currentTri < total)
+            planet.colorTriOverlay(currentTri, 0.0, 1.0, 0.0, 0.3);
+    }
+
+    inline function positionRotateButton(): Void {
+        if (rotateButton == null) return;
+        var b = rotateButton.getBounds();
+        rotateButton.x = this.app.s2d.width - b.width - 12;
+        rotateButton.y = this.app.s2d.height - b.height - 12;
     }
 }
 

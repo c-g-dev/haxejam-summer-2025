@@ -4,6 +4,11 @@ import data.Data.World;
 import data.Data.TriZone;
 import data.Data.MonsterType;
 import data.Data.Monster;
+import data.Data.PlantType;
+import data.Data.Rarity;
+import data.Data.Range;
+import data.Data.SoilType;
+import engine.EventImpl.WorldTools;
 
 class Game {
     public static var world(default, null): World;
@@ -126,5 +131,37 @@ class Game {
                 world.zones[zoneId].monsters.push(new Monster(basicMonsterType, zoneId));
             }
         }
+
+        // After topology and initial content, grant test seeds
+        initializeSeeddata();
+    }
+
+    public static function initializeSeeddata(): Void {
+        // Basic plant type (also the seed properties)
+        var testPlant = new PlantType("test_plant");
+        testPlant.name = "Test Plant";
+        testPlant.maxHp = 10;
+        testPlant.effect = null;
+        testPlant.rarity = Rarity.Common;
+        testPlant.heatReq = { min: -100, max: 100 };
+        testPlant.waterReq = { min: 0, max: 1 };
+        testPlant.soilWhitelist = [SoilType.Sand, SoilType.Fertile, SoilType.Poor, SoilType.Water];
+        testPlant.sunNeeded = 0;
+        testPlant.germTimeQD = 1;
+
+        var waterPlant = new PlantType("water_plant");
+        waterPlant.name = "Water Plant";
+        waterPlant.maxHp = 10;
+        waterPlant.effect = null;
+        waterPlant.rarity = Rarity.Common;
+        waterPlant.heatReq = { min: -50, max: 60 };
+        waterPlant.waterReq = { min: 0.2, max: 1 };
+        waterPlant.soilWhitelist = [SoilType.Water, SoilType.Fertile];
+        waterPlant.sunNeeded = 0;
+        waterPlant.germTimeQD = 1;
+
+        world.seedPool.catalog = [testPlant, waterPlant];
+        WorldTools.addSeed(world, testPlant, 5);
+        WorldTools.addSeed(world, waterPlant, 3);
     }
 }

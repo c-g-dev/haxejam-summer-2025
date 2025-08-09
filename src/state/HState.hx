@@ -52,6 +52,14 @@ abstract class HState {
         return HStateManager.closeSubState(this);
     }
 
+    public function exitState(): Future {
+        if(this.parentState == null) {
+            return Future.immediate();
+        }
+        // When a substate exits, it should simply close itself so the parent resumes,
+        // not trigger a full state switch that would recreate the parent.
+        return HStateManager.closeSubState(this.parentState);
+    }
     
     public function setState(state:HState):Future {
         if(killed) {
@@ -126,18 +134,27 @@ class HStateManager {
 
     public static function openSubState(parent: HState, state: HState):Future {
         return Coro.start((_) -> {
-            if(parent.substate != null) {
-                parent.closeSubState().await();
-            }
-            parent.substate = state;
-            state.parentState = parent;
+            Coro.start((_) -> {
+                if(parent.substate != null) {
+                    parent.closeSubState().await();
+                }
+                parent.substate = state;
+                state.parentState = parent;
+                return Stop;
+            }).await();
+
             state.lifecycle(Create).await();
+
+            Coro.start((_) -> {
             if(state.transitionIn != null) {
-                blockUpdate = true;
-                state.transitionIn.run().await();
-                blockUpdate = false;
-            }
-            state.lifecycle(Activate).await();
+                    blockUpdate = true;
+                    state.transitionIn.run().await();
+                    blockUpdate = false;
+                }
+                state.lifecycle(Activate).await();
+                return Stop;
+            }).await();
+            return Stop;
         }).future();
     }
 

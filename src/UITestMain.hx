@@ -4,32 +4,30 @@ import state.StartMenuState;
 
 class UITestMain extends hxd.App {
 
+    var stars: space.Stars;
+
     override function init() {
         hxd.Res.initEmbed();
 
-        HStateManager.app = this;
+       HStateManager.app = this;
+          
        
-        var startMenu = new StartMenuState();
+       var startMenu = new StartMenuState();
         HStateManager.setState(startMenu);
 
-        
-        /*
-        var text = new h2d.Text(hxd.Res.fonts.plex_mono_64.toFont(), s2d);
-        text.text = "Hello, World!";
-        text.textColor = 0xFFFFFF;
-        text.x = 100;
-        text.y = 100;
-        text.scaleX = 0.5;
-        text.scaleY = 0.5;
-        */
-        //s2d.filter = new FXAAFilter();
     }
 
     override function update(dt:Float) {
-        HStateManager.update(dt);
+       HStateManager.update(dt);
     }
 
     public static function main() {
         new UITestMain();
+    }
+
+    public function new() {
+        super();
+        // Use default material setup to avoid PBR pipeline requirements during the test
+        h3d.mat.MaterialSetup.current = new h3d.mat.PbrMaterialSetup();
     }
 }
