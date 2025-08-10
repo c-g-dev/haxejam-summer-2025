@@ -1,6 +1,5 @@
 package effects;
 
-import h2d.filter.Blur;
 import hxd.Timer;
 import h2d.Object;
 import h2d.Graphics;
@@ -19,8 +18,8 @@ public var endY   : Float;
 
 public var lineColor   : Int     = 0x66CCFF;
 public var thickness   : Int     = 2;
-public var segments    : Int     = 24;
-public var maxJitter   : Float   = 8;
+public var segments    : Int     = 12;
+public var maxJitter   : Float   = 16;
 public var speed       : Float   = 5;
 public var glowRadius  : Float   = 12;
 
@@ -38,7 +37,9 @@ public function new(parent:Object,
 	this.endX   = endX;
 	this.endY   = endY;
 
-	gfx = new Graphics(parent);
+	gfx = new Graphics(this);
+
+
 	// Pre-draw once so bounds are valid before filter runs
 	//update(0);
 }
@@ -46,7 +47,13 @@ public function new(parent:Object,
 	//---------------------------------------------
 	// Call once per frame
 	//---------------------------------------------
-	public function update(dt:Float) {
+
+	public function glow() {
+		var glow = new Glow(0x66CCFF, 1, glowRadius, 1, 1, true);
+		gfx.filter = glow;
+	}
+	
+	public override function sync(ctx:h2d.RenderContext) {
 		gfx.clear();
 		gfx.lineStyle(thickness, lineColor);
 
@@ -71,7 +78,12 @@ public function new(parent:Object,
 			var x = bx + perpX * jitter;
 			var y = by + perpY * jitter;
 
+
 			gfx.lineTo(x, y);
 		}
+
+		gfx.lineTo(endX, endY);
+
+		super.sync(ctx);
 	}
 }

@@ -14,3 +14,10 @@ Coro.start((_) -> //block expr//).await();
 add support for this syntax
 
 Coro.once({//expr block//})
+
+Coro.once({
+    var a = "";
+    ctx.store(a);
+});
+
+ctx.unstore(a);

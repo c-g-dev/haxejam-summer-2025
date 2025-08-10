@@ -25,13 +25,28 @@ class CombatState extends HState {
     var root: h2d.Object;
     var nav: ArrowNav;
 
-    var playerPortrait: Box;
-    var enemyPortrait: Box;
+    // Full-body portrait groups and bitmaps
+    var playerGroup: h2d.Object;
+    var enemyGroup: h2d.Object;
+    var playerBmp: h2d.Bitmap;
+    var enemyBmp: h2d.Bitmap;
 
     var playerHp:Int = 100;
     var enemyHp:Int = 100;
-    var playerHpText: h2d.Text;
-    var enemyHpText: h2d.Text;
+
+    // HP bars replace text labels
+    var playerHpBar: HpBar;
+    var enemyHpBar: HpBar;
+
+    // HP labels above bars
+    var playerHpLabel: h2d.Text;
+    var enemyHpLabel: h2d.Text;
+
+    // Names at the top
+    var playerNameText: h2d.Text;
+    var enemyNameText: h2d.Text;
+    var playerName:String = "Player";
+    var enemyName:String = "Enemy";
 
     var lightning: Lightning;
 
@@ -40,9 +55,24 @@ class CombatState extends HState {
 
     var turn: CombatTurn = Player;
 
+    // Diagonal split backgrounds
+    var bgBase:h2d.Graphics;
+    var bgOverlay:h2d.Graphics;
+    var bgW:Int = -1;
+    var bgH:Int = -1;
+
+    // Diagonal masks for portraits
+    var playerMaskG: h2d.Graphics;
+    var enemyMaskG: h2d.Graphics;
+
     function setup(): Void {
         root = new h2d.Object();
         this.app.s2d.add(root);
+
+        // Backgrounds split along the same diagonal used by lightning (with 24px inset)
+        bgBase = new h2d.Graphics(root);
+        bgOverlay = new h2d.Graphics(root);
+        redrawBackgrounds();
 
         // Diagonal lightning backdrop
         lightning = new Lightning(root, 24, this.app.s2d.height - 24, this.app.s2d.width - 24, 24);
@@ -50,42 +80,60 @@ class CombatState extends HState {
         lightning.segments = 22;
         lightning.lineColor = 0x66CCFF;
         lightning.thickness = 2;
+        lightning.glow();
 
-        // Portraits
-        var pb = Box.build(180, 180);
-        pb.backgroundColor(0x2C2C2C);
-        pb.roundedCorners(10);
-        pb.roundedBorder(4, 0x000000, 10);
-        playerPortrait = pb.get();
+        // Names at the top
+        playerNameText = new h2d.Text(DefaultFont.get(), root);
+        playerNameText.textColor = 0xE8F0FF;
+        playerNameText.text = playerName;
+        playerNameText.x = 24;
+        playerNameText.y = 8;
 
-        var eb = Box.build(180, 180);
-        eb.backgroundColor(0x2C2C2C);
-        eb.roundedCorners(10);
-        eb.roundedBorder(4, 0x000000, 10);
-        enemyPortrait  = eb.get();
-        root.addChild(playerPortrait);
-        root.addChild(enemyPortrait);
+        enemyNameText = new h2d.Text(DefaultFont.get(), root);
+        enemyNameText.textColor = 0xE8F0FF;
+        enemyNameText.text = enemyName;
+        enemyNameText.y = 8;
+        enemyNameText.x = this.app.s2d.width - enemyNameText.textWidth - 24;
 
-        playerPortrait.x = 24;
-        playerPortrait.y = (this.app.s2d.height - playerPortrait.height) / 2;
-        enemyPortrait.x = this.app.s2d.width - enemyPortrait.width - 24;
-        enemyPortrait.y = (this.app.s2d.height - enemyPortrait.height) / 2;
+        // Full-body portraits
+        playerGroup = new h2d.Object(root);
+        enemyGroup = new h2d.Object(root);
 
-        // HP labels
-        playerHpText = new h2d.Text(DefaultFont.get(), root);
-        enemyHpText = new h2d.Text(DefaultFont.get(), root);
-        playerHpText.textColor = 0x00FF66;
-        enemyHpText.textColor = 0xFF6666;
-        playerHpText.x = playerPortrait.x;
-        playerHpText.y = playerPortrait.y - 28;
-        enemyHpText.x = enemyPortrait.x + enemyPortrait.width - 96;
-        enemyHpText.y = enemyPortrait.y - 28;
-        refreshHpTexts();
+        // Load example portrait images from resources
+        playerBmp = new h2d.Bitmap(hxd.Res.guy.toTile(), playerGroup);
+        enemyBmp = new h2d.Bitmap(hxd.Res.guy2.toTile(), enemyGroup);
+
+        // Create and apply diagonal masks
+        playerMaskG = new h2d.Graphics(root);
+        enemyMaskG = new h2d.Graphics(root);
+        playerGroup.filter = new h2d.filter.Mask(playerMaskG, false, true);
+        enemyGroup.filter = new h2d.filter.Mask(enemyMaskG, false, true);
+        redrawMasks();
+
+        // HP bars (under names at top)
+        var barW = Std.int(Math.min(300, Math.max(180, this.app.s2d.width * 0.28)));
+        playerHpBar = new HpBar(root, barW, 10, 0x1C1C1C, 0x00FF66, 0x000000);
+        enemyHpBar = new HpBar(root, barW, 10, 0x1C1C1C, 0xFF6666, 0x000000);
+        playerHpBar.setMax(100);
+        playerHpBar.setValue(playerHp);
+        enemyHpBar.setMax(100);
+        enemyHpBar.setValue(enemyHp);
+
+        // HP labels above bars
+        playerHpLabel = new h2d.Text(DefaultFont.get(), root);
+        playerHpLabel.textColor = 0xE8F0FF;
+        enemyHpLabel = new h2d.Text(DefaultFont.get(), root);
+        enemyHpLabel.textColor = 0xE8F0FF;
+        refreshHpBars();
+
+        // Initial layout for portraits and bars
+        layoutPortraits();
+        positionBarsAndLabels();
 
         // Player weapon buttons (navigable)
         nav = new ArrowNav();
-        var bx = playerPortrait.x;
-        var by = playerPortrait.y + playerPortrait.height + 16;
+        var bx = 24;
+        var by = playerHpBar.y + playerHpBar.height() + 16;
         var spacing = 8;
         for (i in 0...playerWeapons.length) {
             var label = playerWeapons[i];
@@ -110,21 +158,24 @@ class CombatState extends HState {
         }
     }
 
-    function refreshHpTexts(): Void {
-        playerHpText.text = 'HP: ' + playerHp;
-        enemyHpText.text = 'HP: ' + enemyHp;
+    inline function refreshHpBars(): Void {
+        playerHpBar.setValue(playerHp);
+        enemyHpBar.setValue(enemyHp);
+        if (playerHpLabel != null) playerHpLabel.text = playerHp + "/" + playerHpBar.maxValue;
+        if (enemyHpLabel != null) enemyHpLabel.text = enemyHp + "/" + enemyHpBar.maxValue;
+        updateHpLabelPositions();
     }
 
-    inline function portraitCenter(obj: Box): { x: Float, y: Float } {
-        return { x: obj.x + obj.width / 2, y: obj.y + obj.height / 2 };
+    inline function portraitCenterBmp(bmp:h2d.Bitmap): { x: Float, y: Float } {
+        return { x: bmp.x + bmp.width / 2, y: bmp.y + bmp.height / 2 };
     }
 
     function playerAttack(weapon:String): Void {
         if (turn != Player) return;
         turn = Enemy; // lock input until sequence completes
 
-        var p = portraitCenter(playerPortrait);
-        var e = portraitCenter(enemyPortrait);
+        var p = portraitCenterBmp(playerBmp);
+        var e = portraitCenterBmp(enemyBmp);
 
         Coro.start((ctx: CoroutineContext) -> {
             // Attack FX -> damage -> popup
@@ -132,8 +183,8 @@ class CombatState extends HState {
             var dmg = 8 + Std.random(9); // 8..16
             var newEnemyHp = enemyHp - dmg;
             enemyHp = (newEnemyHp < 0) ? 0 : newEnemyHp;
-            refreshHpTexts();
-            DamagePopup.show(root, '-' + dmg, e.x, enemyPortrait.y - 8).await();
+            refreshHpBars();
+            DamagePopup.show(root, '-' + dmg, e.x, enemyBmp.y - 8).await();
 
             if (enemyHp <= 0) {
                 // End combat (for now just exit the state if a parent exists)
@@ -152,14 +203,14 @@ class CombatState extends HState {
         return Coro.start((ctx: CoroutineContext) -> {
             var idx = Std.random(enemyWeapons.length);
             var weapon = enemyWeapons[idx];
-            var p = portraitCenter(playerPortrait);
-            var e = portraitCenter(enemyPortrait);
+            var p = portraitCenterBmp(playerBmp);
+            var e = portraitCenterBmp(enemyBmp);
             AttackFx.lightning(root, e.x, e.y, p.x, p.y, 0.45).await();
             var dmg = 6 + Std.random(7); // 6..12
             var newPlayerHp = playerHp - dmg;
             playerHp = (newPlayerHp < 0) ? 0 : newPlayerHp;
-            refreshHpTexts();
-            DamagePopup.show(root, '-' + dmg, p.x, playerPortrait.y - 8).await();
+            refreshHpBars();
+            DamagePopup.show(root, '-' + dmg, p.x, playerBmp.y - 8).await();
             if (playerHp <= 0) {
                 exitState();
                 return Stop;
@@ -199,6 +250,110 @@ class CombatState extends HState {
             lightning.startY = this.app.s2d.height - 24;
             lightning.endX = this.app.s2d.width - 24;
             lightning.endY = 24;
+        }
+        // keep the diagonal backgrounds, masks, names anchored
+        var w = Std.int(this.app.s2d.width);
+        var h = Std.int(this.app.s2d.height);
+        if (w != bgW || h != bgH) {
+            redrawBackgrounds();
+            redrawMasks();
+            layoutPortraits();
+            positionBarsAndLabels();
+        }
+        if (enemyNameText != null) {
+            enemyNameText.x = this.app.s2d.width - enemyNameText.textWidth - 24;
+        }
+    }
+
+    inline function redrawBackgroundsIfNeeded():Void {
+        var w = Std.int(this.app.s2d.width);
+        var h = Std.int(this.app.s2d.height);
+        if (w != bgW || h != bgH) {
+            redrawBackgrounds();
+        }
+    }
+
+    function redrawBackgrounds():Void {
+        var w = Std.int(this.app.s2d.width);
+        var h = Std.int(this.app.s2d.height);
+        bgW = w; bgH = h;
+
+        bgBase.clear();
+        bgBase.beginFill(0x0E0E12, 1);
+        bgBase.drawRect(0, 0, w, h);
+        bgBase.endFill();
+
+        bgOverlay.clear();
+        bgOverlay.beginFill(0x15202B, 1);
+        // polygon covering the upper-left half separated by the inset diagonal
+        bgOverlay.moveTo(0, 0);
+        bgOverlay.lineTo(w - 24, 24);
+        bgOverlay.lineTo(24, h - 24);
+        bgOverlay.lineTo(0, h);
+        bgOverlay.lineTo(0, 0);
+        bgOverlay.endFill();
+    }
+
+    function redrawMasks():Void {
+        var w = this.app.s2d.width;
+        var h = this.app.s2d.height;
+        playerMaskG.clear();
+        playerMaskG.beginFill(0xFFFFFF, 1);
+        playerMaskG.moveTo(0, 0);
+        playerMaskG.lineTo(w - 24, 24);
+        playerMaskG.lineTo(24, h - 24);
+        playerMaskG.lineTo(0, h);
+        playerMaskG.lineTo(0, 0);
+        playerMaskG.endFill();
+
+        enemyMaskG.clear();
+        enemyMaskG.beginFill(0xFFFFFF, 1);
+        enemyMaskG.moveTo(w, 0);
+        enemyMaskG.lineTo(w, h);
+        enemyMaskG.lineTo(24, h - 24);
+        enemyMaskG.lineTo(w - 24, 24);
+        enemyMaskG.lineTo(w, 0);
+        enemyMaskG.endFill();
+
+        playerMaskG.smooth = true;
+        enemyMaskG.smooth = true;
+    }
+
+    function layoutPortraits():Void {
+        var w = this.app.s2d.width;
+        var h = this.app.s2d.height;
+        var margin = 24.0;
+        // scale to fit height mostly
+        var targetH = h - margin * 2 - 48; // leave room at top/bottom
+        var scaleP = targetH / playerBmp.tile.height;
+        var scaleE = targetH / enemyBmp.tile.height;
+        playerBmp.scaleX = playerBmp.scaleY = scaleP;
+        enemyBmp.scaleX = enemyBmp.scaleY = scaleE;
+        // position near sides, bottom aligned
+        playerBmp.x = margin;
+        playerBmp.y = h - margin - playerBmp.height;
+        enemyBmp.x = w - margin - enemyBmp.width;
+        enemyBmp.y = h - margin - enemyBmp.height;
+    }
+
+    inline function positionBarsAndLabels():Void {
+        var topY = 8 + playerNameText.textHeight + 8;
+        playerHpBar.x = 24;
+        playerHpBar.y = topY;
+        enemyHpBar.x = this.app.s2d.width - enemyHpBar.width() - 24;
+        enemyHpBar.y = 8 + enemyNameText.textHeight + 8;
+        updateHpLabelPositions();
+    }
+
+    inline function updateHpLabelPositions():Void {
+        // center labels horizontally over their respective bars
+        if (playerHpLabel != null) {
+            playerHpLabel.y = playerHpBar.y - 14;
+            playerHpLabel.x = playerHpBar.x + (playerHpBar.width() - playerHpLabel.textWidth) / 2;
+        }
+        if (enemyHpLabel != null) {
+            enemyHpLabel.y = enemyHpBar.y - 14;
+            enemyHpLabel.x = enemyHpBar.x + (enemyHpBar.width() - enemyHpLabel.textWidth) / 2;
         }
     }
 }
@@ -247,5 +402,73 @@ class DamagePopup {
             }
             return WaitNextFrame;
         }).future();
+    }
+}
+
+class HpBar extends h2d.Object {
+    public var maxValue(default, null):Int;
+    public var currentValue(default, null):Int;
+
+    final widthPx:Float;
+    final heightPx:Float;
+
+    final backColor:Int;
+    final fillColor:Int;
+    final borderColor:Int;
+
+    var back:h2d.Graphics;
+    var fill:h2d.Graphics;
+    var border:h2d.Graphics;
+
+    public function new(parent:h2d.Object, widthPx:Float, heightPx:Float, backColor:Int, fillColor:Int, borderColor:Int) {
+        super(parent);
+        this.widthPx = widthPx;
+        this.heightPx = heightPx;
+        this.backColor = backColor;
+        this.fillColor = fillColor;
+        this.borderColor = borderColor;
+        this.maxValue = 100;
+        this.currentValue = 100;
+
+        back = new h2d.Graphics(this);
+        fill = new h2d.Graphics(this);
+        border = new h2d.Graphics(this);
+
+        redraw();
+    }
+
+    public function setMax(max:Int):Void {
+        maxValue = max;
+        if (currentValue > maxValue) currentValue = maxValue;
+        redraw();
+    }
+
+    public function setValue(v:Int):Void {
+        currentValue = (v < 0) ? 0 : (v > maxValue ? maxValue : v);
+        redraw();
+    }
+
+    public inline function width():Float return widthPx;
+    public inline function height():Float return heightPx;
+
+    inline function redraw():Void {
+        // background
+        back.clear();
+        back.beginFill(backColor, 1);
+        back.drawRoundedRect(0, 0, widthPx, heightPx, Std.int(heightPx / 2));
+        back.endFill();
+
+        // fill
+        var pct = (maxValue == 0) ? 0.0 : (currentValue / maxValue);
+        var fillW = widthPx * pct;
+        fill.clear();
+        fill.beginFill(fillColor, 1);
+        fill.drawRoundedRect(0, 0, fillW, heightPx, Std.int(heightPx / 2));
+        fill.endFill();
+
+        // border
+        border.clear();
+        border.lineStyle(1, borderColor, 1);
+        border.drawRoundedRect(0, 0, widthPx, heightPx, Std.int(heightPx / 2));
     }
 }
