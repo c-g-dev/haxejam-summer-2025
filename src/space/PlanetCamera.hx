@@ -25,9 +25,6 @@ class PlanetCamera {
         );
     }
 
-    /* ------------------------------------------------------------------
-       Helpers
-       ------------------------------------------------------------------ */
 
     
     static function slerp(u:h3d.Vector, v:h3d.Vector, t:Float):h3d.Vector {
@@ -48,9 +45,6 @@ class PlanetCamera {
         );
     }
 
-    /* ------------------------------------------------------------------
-       Public API
-       ------------------------------------------------------------------ */
 
     public function moveToTriangle(idx:Int, speed:Float):Future {
         var tgt = planet.getTriangleCenter(idx);

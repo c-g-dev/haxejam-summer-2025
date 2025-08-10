@@ -13,10 +13,10 @@ private typedef Ghost = {
 }
 
 class GhostTrailCentered extends h2d.Object {
-	/* The sprite that sits in the centre of the screen */
+	
 	public var target:h2d.Bitmap;
 
-	/* Called each frame – you return the camera/world delta (dx,dy) */
+	
 	public var getScroll:Void->{dx: Float, dy: Float};
 
 	public var spawnDelay = 0.1;
@@ -37,16 +37,16 @@ class GhostTrailCentered extends h2d.Object {
 		var dt = Timer.dt;
 		_accum += dt;
 
-		/* camera speed the last frame */
+		
 		var cam = getScroll();
 
-		/* If the scenery is scrolling, create a new copy every spawnDelay */
+		
 		if (_accum >= spawnDelay && (cam.dx * cam.dx + cam.dy * cam.dy) > 0) {
 			_accum -= spawnDelay;
 			trace("spawning ghost: " + -cam.dx);
 			spawnGhost(-cam.dx, -cam.dy); 		}
 
-		/* Update existing ghosts */
+		
 		for (g in _ghosts.copy()) {
 			g.timeLeft -= dt;
 			if (g.timeLeft <= 0) {
@@ -55,13 +55,13 @@ class GhostTrailCentered extends h2d.Object {
 				continue;
 			}
 
-			/* Move the ghost along its stored velocity */
+			
 			g.sp.x += g.vx;
 			g.sp.y += g.vy;
 
 			trace("ghost: " + g.sp.x + ", " + g.sp.y + " " + g.vx + " " + g.vy);
 
-			/* Fade it out */
+			
 			g.sp.alpha = startAlpha * (g.timeLeft / lifeTime);
 		}
 

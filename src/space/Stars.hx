@@ -9,34 +9,38 @@ import h3d.mat.Data.Compare;
 import h3d.Camera;
 
 class Stars extends Object {
-    var mesh:Mesh;
-    var camera:Camera;
-    var rotationSpeed:Float = 0.02; 
-    public function new(parent:Object, camera:Camera) {
-        super(parent);
-        this.camera = camera;
+	var mesh:Mesh;
+	var camera:Camera;
+	var rotationSpeed:Float = 0.02;
 
-        var prim = new Sphere(100, 48, 48);         prim.addNormals();
-        prim.addUVs();
+	public function new(parent:Object, camera:Camera) {
+		super(parent);
+		this.camera = camera;
 
-        mesh = new Mesh(prim, this);
+		var prim = new Sphere(100, 48, 48);
+		prim.addNormals();
+		prim.addUVs();
 
-        var mat = Material.create();
-        mat.mainPass.enableLights = false;         mat.mainPass.culling = Face.Front;         mat.mainPass.depth(true, Compare.LessEqual);
-        mat.mainPass.depthWrite = false; 
-        var tex = hxd.Res.skybox.toTexture();
-        tex.wrap = Repeat;
-        tex.filter = Linear;
-        mat.texture = tex;
+		mesh = new Mesh(prim, this);
 
-        mesh.material = mat;
+		var mat = Material.create();
+		mat.mainPass.enableLights = false;
+		mat.mainPass.culling = Face.Front;
+		mat.mainPass.depth(true, Compare.LessEqual);
+		mat.mainPass.depthWrite = false;
+		var tex = hxd.Res.skybox.toTexture();
+		tex.wrap = Repeat;
+		tex.filter = Linear;
+		mat.texture = tex;
 
-                setPosition(camera.pos.x, camera.pos.y, camera.pos.z);
-    }
+		mesh.material = mat;
 
-    override function sync(ctx:h3d.scene.RenderContext) {
-        super.sync(ctx);
-                setPosition(camera.pos.x, camera.pos.y, camera.pos.z);
-        rotate(0, rotationSpeed * ctx.elapsedTime, 0);
-    }
+		setPosition(camera.pos.x, camera.pos.y, camera.pos.z);
+	}
+
+	override function sync(ctx:h3d.scene.RenderContext) {
+		super.sync(ctx);
+		setPosition(camera.pos.x, camera.pos.y, camera.pos.z);
+		rotate(0, rotationSpeed * ctx.elapsedTime, 0);
+	}
 }
