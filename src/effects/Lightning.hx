@@ -20,7 +20,7 @@ public var endY   : Float;
 public var lineColor   : Int     = 0x66CCFF;
 public var thickness   : Int     = 2;
 public var segments    : Int     = 24;
-public var maxJitter   : Float   = 8;
+public var maxJitter   : Float   = 16;
 public var speed       : Float   = 5;
 public var glowRadius  : Float   = 12;
 
@@ -41,6 +41,9 @@ public function new(parent:Object,
 	gfx = new Graphics(parent);
 	// Pre-draw once so bounds are valid before filter runs
 	//update(0);
+
+	var glow = new Glow(0x66CCFF, 1, thickness);
+	@:privateAccess gfx.filter = glow;
 }
 
 	//---------------------------------------------
