@@ -25,7 +25,6 @@ typedef FormSchema = Array<FormSchemaItem>;
 
 typedef FormValues = Map<String, {value:Dynamic, ?subform:FormValues}>;
 
-// Renderer typedef
 typedef FormItemRenderer = {
     type:String,
     renderer:(form:Form, item:FormSchemaItem) -> h2d.Object,
@@ -42,57 +41,47 @@ class Form extends VBox {
 
     private static var renderers:Map<String, FormItemRenderer> = new Map();
 
-    // Register a renderer for a specific form item type
-    public static function registerRenderer(type:String, renderer:FormItemRenderer):Void {
+        public static function registerRenderer(type:String, renderer:FormItemRenderer):Void {
         renderers.set(type, renderer);
     }
 
-    // Constructor
-    public function new(schema:Array<FormSchemaItem>) {
+        public function new(schema:Array<FormSchemaItem>) {
         super(200, 200);
         this.schema = schema;
         this.subforms = new Map();
         this.controls = new Map();
         this.changeCallbacks = new Map();
         this.validators = new Map();
-      //  this.layout = Vertical;
-       // this.verticalSpacing = 5;
-        this.setPadding(10);
+                     this.setPadding(10);
         this.forceRowHeight(30);
-        // Initialize form items
-        for (item in schema) {
+                for (item in schema) {
             var control = renderItem(item);
             this.addChild(control);
             controls.set(item.label, control);
         }
     }
 
-    // Render an individual form item (to be implemented via registered renderers)
-    private function renderItem(item:FormSchemaItem):h2d.Object {
+        private function renderItem(item:FormSchemaItem):h2d.Object {
         var renderer = renderers.get(item.type);
         if (renderer != null) {
             return renderer.renderer(this, item);
         }
-        // Placeholder for unregistered types
-        var text = new h2d.Text(DefaultFont.get());
+                var text = new h2d.Text(DefaultFont.get());
         text.text = 'Unknown type: ${item.type}';
         return text;
     }
 
-    // Trigger change callbacks
-    private function handleChange(label:String):Void {
+        private function handleChange(label:String):Void {
         if (changeCallbacks.exists(label)) {
             changeCallbacks.get(label)();
         }
     }
 
-    // Register a change callback for a form item
-    public function onChange(itemLabel:String, cb:Void->Void):Void {
+        public function onChange(itemLabel:String, cb:Void->Void):Void {
         changeCallbacks.set(itemLabel, cb);
     }
 
-    // Set a subform for a specific form item
-    public function setSubform(itemLabel:String, schema:Array<FormSchemaItem>):Void {
+        public function setSubform(itemLabel:String, schema:Array<FormSchemaItem>):Void {
         var control = controls.get(itemLabel);
         if (control != null) {
             if (subforms.exists(itemLabel)) {
@@ -107,8 +96,7 @@ class Form extends VBox {
         }
     }
 
-    // Remove a subform
-    public function removeSubform(itemLabel:String):Void {
+        public function removeSubform(itemLabel:String):Void {
         if (subforms.exists(itemLabel)) {
             var subform = subforms.get(itemLabel);
             subform.remove();
@@ -116,8 +104,7 @@ class Form extends VBox {
         }
     }
 
-    // Collect values from all form items and subforms
-    public function getValues():FormValues {
+        public function getValues():FormValues {
         var values = new Map<String, {value:Dynamic, ?subform:FormValues}>();
         
         for (item in schema) {
@@ -144,13 +131,11 @@ class Form extends VBox {
         return values;
     }
 
-    // Add a validator for a form item
-    public function addValidation(itemLabel:String, validator:Dynamic->Bool):Void {
+        public function addValidation(itemLabel:String, validator:Dynamic->Bool):Void {
         validators.set(itemLabel, validator);
     }
 
-    // Validate all form items and subforms
-    public function validate():Bool {
+        public function validate():Bool {
         var values = getValues();
         var isValid = true;
 
@@ -162,8 +147,7 @@ class Form extends VBox {
                 if (!valid) {
                     isValid = false;
                     trace('Validation failed for ${item.label}');
-                    // Add visual feedback here later if needed
-                }
+                                    }
             }
         }
 
@@ -176,8 +160,7 @@ class Form extends VBox {
         return isValid;
     }
 
-    // Set the value of a specific form item
-    public function setValue(itemLabel:String, value:Dynamic):Void {
+        public function setValue(itemLabel:String, value:Dynamic):Void {
         var control = controls.get(itemLabel);
         if (control != null) {
             var item = schema.find(i -> i.label == itemLabel);
@@ -193,8 +176,7 @@ class Form extends VBox {
         }
     }
 
-    // Convenience method to create and configure a form
-    public static inline function create(schema:Array<FormSchemaItem>, setup:(Form)->Void):Form {
+        public static inline function create(schema:Array<FormSchemaItem>, setup:(Form)->Void):Form {
         var form = new Form(schema);
         setup(form);
         return form;

@@ -26,13 +26,11 @@ class WorldActionChoice extends Object {
         text.text = label;
         text.textColor = 0xFFFFFF;
         text.dropShadow = { dx: 1, dy: 1, color: 0x000000, alpha: 1 };
-        // center text under icon
-        text.x = -Std.int(text.textWidth / 2);
+                text.x = -Std.int(text.textWidth / 2);
         text.y = icon.getBounds().height + 4;
         addChild(text);
 
-        // center icon around this node origin for nicer circling
-        var b = icon.getBounds();
+                var b = icon.getBounds();
         icon.x = -Std.int(b.width / 2);
         icon.y = -Std.int(b.height / 2);
 

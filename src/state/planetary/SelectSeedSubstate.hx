@@ -11,8 +11,7 @@ import heaps.coroutine.Coroutine.CoroutineContext;
 
 class SelectSeedSubstate extends HState {
 
-    //show the seed list view for making a choice
-    var seedList: SeedListView;
+        var seedList: SeedListView;
     var zoneId: Int;
 
     public function new(zoneId:Int) {
@@ -23,8 +22,7 @@ class SelectSeedSubstate extends HState {
     public function lifecycle(e: HStateLifeCycle):Future {
         switch e {
             case Create: {
-                // Full-screen panel anchored at top-left
-                seedList = new SeedListView(Std.int(this.app.s2d.width * 0.7), this.app.s2d.height);
+                                seedList = new SeedListView(Std.int(this.app.s2d.width * 0.7), this.app.s2d.height);
                 seedList.x = Std.int((this.app.s2d.width - seedList.totalWidth) / 2);
                 seedList.y = Std.int((this.app.s2d.height - seedList.totalHeight) / 2);
                 seedList.alpha = 0.0;

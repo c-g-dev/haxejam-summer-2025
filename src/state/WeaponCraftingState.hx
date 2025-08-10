@@ -23,12 +23,7 @@ typedef WeaponSpec = {
 
 class WeaponCraftingState extends HState {
 
-    //left side: a list of available weapons to craft
-    //arrow nav through the list
-    //if you don't have the necessary materials to craft a weapon its text is greyed out
-    //if you do you can action the item to craft it
-    //right side: a panel describing the weapon and it's cost
-
+                    
     var root: h2d.Object;
     var headerBox: Box;
     var footerBox: Box;
@@ -101,8 +96,7 @@ class WeaponCraftingState extends HState {
 
         nav = new ArrowNav();
 
-        // Detail texts
-        titleText = new h2d.Text(font, detailBox);
+                titleText = new h2d.Text(font, detailBox);
         titleText.textColor = 0xFFFFFF;
         titleText.scale(0.5);
         titleText.x = 12;
@@ -163,8 +157,7 @@ class WeaponCraftingState extends HState {
     function attemptCraft(spec: WeaponSpec): Void {
         if (!canCraft(spec)) return;
         WorldEngine.enqueue(new CraftWeaponEvent(spec.type, spec.cost));
-        // After crafting, reflect inventory changes
-        refreshCraftability();
+                refreshCraftability();
         updateDetail(spec);
     }
 
@@ -219,26 +212,22 @@ class WeaponCraftingState extends HState {
     }
 
     function buildCatalog(): Void {
-        // Minimal demo catalog; real game should source this from data
-        var specs:Array<WeaponSpec> = [];
+                var specs:Array<WeaponSpec> = [];
 
-        // Light Blade (Arm)
-        var blade = new WeaponType("w_blade_light");
+                var blade = new WeaponType("w_blade_light");
         blade.name = "Light Blade";
         blade.slotKind = SlotKind.Arm;
         blade.passiveStats = new Stats();
         blade.passiveStats.power = 2;
         blade.passiveStats.hp = 0;
         blade.passiveStats.defense = 0;
-        blade.attacks = []; // populate later
-        blade.maxLevel = 3;
+        blade.attacks = [];         blade.maxLevel = 3;
         var bladeCost:Map<MaterialType, Int> = new Map();
         bladeCost.set("metal", 3);
         bladeCost.set("wire", 1);
         specs.push({ type: blade, cost: bladeCost });
 
-        // Core Plating (Core)
-        var core = new WeaponType("w_core_plating");
+                var core = new WeaponType("w_core_plating");
         core.name = "Core Plating";
         core.slotKind = SlotKind.Core;
         core.passiveStats = new Stats();
@@ -251,8 +240,7 @@ class WeaponCraftingState extends HState {
         coreCost.set("metal", 5);
         specs.push({ type: core, cost: coreCost });
 
-        // Aux Battery (Auxiliary)
-        var aux = new WeaponType("w_aux_battery");
+                var aux = new WeaponType("w_aux_battery");
         aux.name = "Aux Battery";
         aux.slotKind = SlotKind.Auxiliary;
         aux.passiveStats = new Stats();

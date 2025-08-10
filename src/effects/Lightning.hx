@@ -8,9 +8,6 @@ import hxd.Math;
 
 class Lightning extends Object {
 
-//---------------------------------------------
-// public parameters you can tweak at runtime
-//---------------------------------------------
 public var startX : Float;
 public var startY : Float;
 public var endX   : Float;
@@ -23,7 +20,6 @@ public var maxJitter   : Float   = 16;
 public var speed       : Float   = 5;
 public var glowRadius  : Float   = 12;
 
-//---------------------------------------------
 var gfx : Graphics;
 
 public function new(parent:Object,
@@ -40,14 +36,9 @@ public function new(parent:Object,
 	gfx = new Graphics(this);
 
 
-	// Pre-draw once so bounds are valid before filter runs
-	//update(0);
-}
+		}
 
-	//---------------------------------------------
-	// Call once per frame
-	//---------------------------------------------
-
+			
 	public function glow() {
 		var glow = new Glow(0x66CCFF, 1, glowRadius, 1, 1, true);
 		gfx.filter = glow;
@@ -57,8 +48,7 @@ public function new(parent:Object,
 		gfx.clear();
 		gfx.lineStyle(thickness, lineColor);
 
-		// unit perpendicular to main segment
-		var dx  = endX - startX;
+				var dx  = endX - startX;
 		var dy  = endY - startY;
 		var len = Math.sqrt(dx*dx + dy*dy);
 		if (len == 0) return;

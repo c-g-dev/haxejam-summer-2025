@@ -16,7 +16,7 @@ import hxd.FloatBuffer;
 import hxd.IndexBuffer;
 import h3d.shader.FixedColor;
 import h3d.Matrix;
-
+import ui.Icons; 
 class Planet extends h3d.scene.Object {
 
     var sphere: Object;
@@ -28,8 +28,7 @@ class Planet extends h3d.scene.Object {
 
     public var cameraMover: PlanetCamera;
 
-    // One overlay mesh per subdivided triangle for tinting/highlighting
-    var triMeshes: Array<h3d.scene.Mesh> = [];
+        var triMeshes: Array<h3d.scene.Mesh> = [];
     var triColors: Array<h3d.shader.FixedColor> = [];
 
 
@@ -41,35 +40,25 @@ class Planet extends h3d.scene.Object {
         sphere = new Object(this);
 
         var spherePrim = new Sphere(1, 32, 32);
-        spherePrim.addNormals(); // Required for lighting
-        spherePrim.addUVs(); // Optional, if using textures
-
+        spherePrim.addNormals();         spherePrim.addUVs(); 
         var sphereMesh = new Mesh(spherePrim);
         sphereMesh.material.mainPass.enableLights = true;
         sphereMesh.material.mainPass.culling = None;
 
-        var tex = hxd.Res.topography.toTexture(); // Assumes the resource is embedded as 'earth_jpg'
-        tex.wrap = Clamp; // Clamp wrapping to avoid seams on the sphere
-        tex.filter = Linear; // Smooth filtering for better appearance
-        sphereMesh.material.texture = tex;
+        var tex = hxd.Res.topography.toTexture();         tex.wrap = Clamp;         tex.filter = Linear;         sphereMesh.material.texture = tex;
         
 
-        sphere.addChild(sphereMesh); // NEW: Add to scene for interaction to work
-        sphereMesh.scale(.935);
+        sphere.addChild(sphereMesh);         sphereMesh.scale(.935);
 
         initGrid(s2d);
 
-        // DEBUG: add a visible test triangle in front of camera to validate pipeline
-      //  addDebugTestTriangle();
-    }
+                  }
 
     private function initGrid(s2d: h2d.Scene) {
-        // Golden ratio and normalization (unchanged)
-        var phi = (1 + Math.sqrt(5)) / 2;
+                var phi = (1 + Math.sqrt(5)) / 2;
         var norm = Math.sqrt(1 + phi * phi);
 
-        // Original 12 vertices (unchanged)
-        var verts = [
+                var verts = [
             new h3d.Vector(phi / norm, 1 / norm, 0 / norm),
             new h3d.Vector(-phi / norm, 1 / norm, 0 / norm),
             new h3d.Vector(phi / norm, -1 / norm, 0 / norm),
@@ -84,8 +73,7 @@ class Planet extends h3d.scene.Object {
             new h3d.Vector(0 / norm, -phi / norm, -1 / norm)
         ];
 
-        // Original 20 faces (unchanged)
-        var faces = [
+                var faces = [
             [0, 8, 4],
             [0, 5, 10],
             [2, 4, 9],
@@ -108,13 +96,8 @@ class Planet extends h3d.scene.Object {
             [11, 7, 5]
         ];
 
-        // Subdivide: create new vertices (midpoints) and subdivided faces
-        newVerts = verts.copy(); // Start with originals (indices 0-11)
-        var midMap = new Map<String, Int>(); // Key: "min-max", Value: new vertex index
-        subFaces = []; // Array<Array<Int>> for 80 subdivided faces
-
-        // Helper to get/create midpoint index
-        function getMid(a: Int, b: Int): Int {
+                newVerts = verts.copy();         var midMap = new Map<String, Int>();         subFaces = []; 
+                function getMid(a: Int, b: Int): Int {
             var min = a < b ? a : b;
             var max = a > b ? a : b;
             var key = '$min-$max';
@@ -130,24 +113,14 @@ class Planet extends h3d.scene.Object {
             return idx;
         }
 
-        // Subdivide each face
-        for (f in faces) {
+                for (f in faces) {
             var a = f[0];
             var b = f[1];
             var c = f[2];
-            var d = getMid(a, b); // Mid AB
-            var e = getMid(b, c); // Mid BC
-            var mf = getMid(c, a); // Mid CA (avoid 'f' name conflict)
-            
-            // Four subtriangles per original (orders preserve orientation for detection)
-            subFaces.push([a, d, mf]); // Corner at A
-            subFaces.push([b, e, d]); // Corner at B
-            subFaces.push([c, mf, e]); // Corner at C
-            subFaces.push([d, e, mf]); // Middle
-        }
+            var d = getMid(a, b);             var e = getMid(b, c);             var mf = getMid(c, a);             
+                        subFaces.push([a, d, mf]);             subFaces.push([b, e, d]);             subFaces.push([c, mf, e]);             subFaces.push([d, e, mf]);         }
 
-        // Build edge to triangles map
-        var edgeToTris = new Map<String, Array<Int>>();
+                var edgeToTris = new Map<String, Array<Int>>();
         for (triIdx in 0...subFaces.length) {
             var tri = subFaces[triIdx];
             var triEdges = [[tri[0], tri[1]], [tri[1], tri[2]], [tri[2], tri[0]]];
@@ -161,8 +134,7 @@ class Planet extends h3d.scene.Object {
             }
         }
 
-        // Build adjacency map
-        adjMap = new Map<Int, Array<Int>>();
+                adjMap = new Map<Int, Array<Int>>();
         for (triIdx in 0...subFaces.length) {
             var tri = subFaces[triIdx];
             var adjs = [];
@@ -178,8 +150,7 @@ class Planet extends h3d.scene.Object {
         }
 
         var edgeCount = 0;
-        // Now draw lines for subdivided edges
-        var edges = new Map<String, Array<Int>>();
+                var edges = new Map<String, Array<Int>>();
         function addEdge(a: Int, b: Int) {
             var key = a < b ? '$a-$b' : '$b-$a';
             if (!edges.exists(key)) {
@@ -193,16 +164,14 @@ class Planet extends h3d.scene.Object {
             addEdge(sf[2], sf[0]);
         }
 
-        // Build triangle overlay meshes BEFORE drawing edges so edges render on top
-        buildTriangleOverlays();
+                buildTriangleOverlays();
 
         var g = new h3d.scene.Graphics(sphere);
         g.material.mainPass.depth(true, h3d.mat.Data.Compare.LessEqual);
         g.lineStyle(2, 0x000000, 0.5);
 
 
-        // Arc drawing function (updated to use newVerts)
-        function drawArc(v1: h3d.Vector, v2: h3d.Vector, segments: Int = 16) {
+                function drawArc(v1: h3d.Vector, v2: h3d.Vector, segments: Int = 16) {
             var theta = Math.acos(v1.dot(v2));
             var sinTheta = Math.sin(theta);
             if (sinTheta == 0) return;
@@ -233,15 +202,13 @@ class Planet extends h3d.scene.Object {
             }
         }
 
-        // Draw all subdivided edges
-        for (edge in edges) {
+                for (edge in edges) {
             var v1 = newVerts[edge[0]];
             var v2 = newVerts[edge[1]];
             drawArc(v1, v2);
         }
 
-        // Add labels for each subdivided face
-        var font = hxd.res.DefaultFont.get();
+                var font = hxd.res.DefaultFont.get();
         for (i in 0...subFaces.length) {
             var sf = subFaces[i];
             var centroid = new h3d.Vector(0, 0, 0);
@@ -252,13 +219,11 @@ class Planet extends h3d.scene.Object {
                 centroid.z += v.z;
             }
             centroid.scale(1 / 3);
-            centroid.normalize();  // Project back to sphere surface
-
+            centroid.normalize();  
             var t = new h2d.Text(font, s2d);
             t.text = Std.string(i);
             t.textColor = 0xFF0000;
-            t.dropShadow = { dx: 1, dy: 1, color: 0x000000, alpha: 0.5 };  // For better visibility
-
+            t.dropShadow = { dx: 1, dy: 1, color: 0x000000, alpha: 0.5 };  
             labels.push({ pos: centroid, text: t });
             var icon = new h2d.Bitmap(hxd.Res.sprite_placeholder.toTile(), s2d);
             icon.visible = false;
@@ -266,13 +231,11 @@ class Planet extends h3d.scene.Object {
         }
     }
 
-    // Create a simple single-triangle primitive and mesh for each subFace, slightly above sphere surface
-    function buildTriangleOverlays(): Void {
+        function buildTriangleOverlays(): Void {
         triMeshes = [];
         triColors = [];
 
-        // Constant slight offset to avoid z-fighting with the sphere surface
-        var pushOut = 1.004;
+                var pushOut = 1.004;
 
         for (i in 0...subFaces.length) {
             var sf = subFaces[i];
@@ -283,8 +246,7 @@ class Planet extends h3d.scene.Object {
             var mesh = createTriMesh(v1, v2, v3);
             sphere.addChild(mesh);
 
-            // Use FixedColor, but render in the PBR "overlay" pass so alpha is respected
-            var fixed = new FixedColor(0xFFFFFF, 0);
+                        var fixed = new FixedColor(0xFFFFFF, 0);
             mesh.material.mainPass.addShader(fixed);
             mesh.material.mainPass.enableLights = false;
             mesh.material.mainPass.culling = None;
@@ -292,27 +254,22 @@ class Planet extends h3d.scene.Object {
             mesh.material.blendMode = h3d.mat.BlendMode.Alpha;
             mesh.material.mainPass.setPassName("overlay");
         
-            // Now that we validated rendering, use sane depth test
-            mesh.material.mainPass.depth(false, h3d.mat.Data.Compare.LessEqual);
-            // removed overlay pass code because this doesn't do anything
-
+                        mesh.material.mainPass.depth(false, h3d.mat.Data.Compare.LessEqual);
+            
             triMeshes.push(mesh);
             triColors.push(fixed);
         }
     }
 
-    // Build a single-triangle RawPrimitive mesh from 3 points; normals point outward
-    function createTriMesh(p1: h3d.Vector, p2: h3d.Vector, p3: h3d.Vector): h3d.scene.Mesh {
-        // Include UVs to match common mesh pipeline expectations
-        @:privateAccess var format = new BufferFormat([
+        function createTriMesh(p1: h3d.Vector, p2: h3d.Vector, p3: h3d.Vector): h3d.scene.Mesh {
+                @:privateAccess var format = new BufferFormat([
             { name: "position", type: DVec3 },
             { name: "normal", type: DVec3 },
             { name: "uv", type: DVec2 }
         ]);
 
         var floats = new FloatBuffer();
-        // Compute flat face normal for reliable shading
-        var e1 = p2.sub(p1);
+                var e1 = p2.sub(p1);
         var e2 = p3.sub(p1);
         var n = e1.cross(e2); n.normalize();
         function pushVertex(p: h3d.Vector, u: Float, v: Float) {
@@ -320,8 +277,7 @@ class Planet extends h3d.scene.Object {
             floats.push(n.x); floats.push(n.y); floats.push(n.z);
             floats.push(u); floats.push(v);
         }
-        // Simple UVs for triangle
-        pushVertex(p1, 0.0, 0.0);
+                pushVertex(p1, 0.0, 0.0);
         pushVertex(p2, 1.0, 0.0);
         pushVertex(p3, 0.5, 1.0);
 
@@ -337,10 +293,8 @@ class Planet extends h3d.scene.Object {
         return new Mesh(prim);
     }
 
-    // Places a large magenta triangle facing the camera near the origin as a visibility test
-    function addDebugTestTriangle(): Void {
-        // Triangle in front of origin, facing +Z camera; with Always depth test it should show regardless
-        var p1 = new h3d.Vector(-0.8, -0.8, 0.2);
+        function addDebugTestTriangle(): Void {
+                var p1 = new h3d.Vector(-0.8, -0.8, 0.2);
         var p2 = new h3d.Vector(0.8, -0.8, 0.2);
         var p3 = new h3d.Vector(0.0, 0.8, 0.2);
         var m = createTriMesh(p1, p2, p3);
@@ -355,22 +309,19 @@ class Planet extends h3d.scene.Object {
         m.material.mainPass.depth(false, h3d.mat.Data.Compare.Always);
     }
 
-    // Set the overlay color (RGBA) for a given triangle id
-    public function colorTriOverlay(index: Int, r: Float, g: Float, b: Float, a: Float): Void {
+        public function colorTriOverlay(index: Int, r: Float, g: Float, b: Float, a: Float): Void {
         if (index < 0 || index >= triColors.length) return;
         var c = triColors[index];
         c.color.set(r, g, b, a);
     }
 
-    // Clear all overlays (make fully transparent)
-    public function clearTriOverlays(): Void {
+        public function clearTriOverlays(): Void {
         for (c in triColors) c.color.set(0, 0, 0, 0);
     }
 
     public function updateLabels(camera: h3d.Camera, s2d: h2d.Scene) {
         var tanFov = Math.tan(camera.fovY * Math.PI / 180 / 2);
-        // Use planet's absolute transform so labels follow any planet rotation
-        var rotM = this.getAbsPos();
+                var rotM = this.getAbsPos();
         var world = engine.Game.world;
         for (i in 0...labels.length) {
             var l = labels[i];
@@ -394,7 +345,9 @@ class Planet extends h3d.scene.Object {
                 continue;
             }
 
-            var hasPlant = world != null && world.zones != null && i < world.zones.length && world.zones[i] != null && world.zones[i].plant != null;
+            var zoneValid = world != null && world.zones != null && i < world.zones.length && world.zones[i] != null;
+            var hasPlant = zoneValid && world.zones[i].plant != null;
+            var isHostile = zoneValid && world.zones[i].isHostile;
 
             var dist = camera.pos.distance(lp);
             var px_per_world = s2d.height * camera.zoom / (2 * dist * tanFov);
@@ -404,25 +357,32 @@ class Planet extends h3d.scene.Object {
             var screenX = (p.x * 0.5 + 0.5) * s2d.width;
             var screenY = (-p.y * 0.5 + 0.5) * s2d.height;
 
-            if (hasPlant) {
-                // Show icon, hide text
+            if (isHostile) {
+                                icon.tile = Icons.getTile("monster");
+                var tMon = icon.tile;
+                var scaleMon = target_px / tMon.width;
+                icon.scaleX = scaleMon;
+                icon.scaleY = scaleMon;
+                icon.visible = true;
+                l.text.visible = false;
+                icon.x = screenX - (tMon.width * scaleMon) / 2;
+                icon.y = screenY - (tMon.height * scaleMon) / 2;
+            } else if (hasPlant) {
+                                icon.tile = hxd.Res.sprite_placeholder.toTile();
                 var tile = icon.tile;
                 var scaleIcon = target_px / tile.width;
                 icon.scaleX = scaleIcon;
                 icon.scaleY = scaleIcon;
                 icon.visible = true;
                 l.text.visible = false;
-
                 icon.x = screenX - (tile.width * scaleIcon) / 2;
                 icon.y = screenY - (tile.height * scaleIcon) / 2;
             } else {
-                // Show text, hide icon
-                var scale = target_px / l.text.textWidth;
+                                var scale = target_px / l.text.textWidth;
                 l.text.scaleX = scale;
                 l.text.scaleY = scale;
                 l.text.visible = true;
                 icon.visible = false;
-
                 l.text.x = screenX - l.text.textWidth * scale / 2;
                 l.text.y = screenY - l.text.textHeight * scale / 2;
             }

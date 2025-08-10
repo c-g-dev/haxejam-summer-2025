@@ -65,32 +65,24 @@ class WorldTools {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  Services (pure query helpers – *no mutation here!*)
-// ────────────────────────────────────────────────────────────────
 class PlantService {
-    /** Can this plant type be planted as a seed right now on that zone? */
+    
     public static function canPlant(plant:PlantType, zone:TriZone, world:World):Bool {
-		// 1. zone free and non-hostile
-		if (zone.plant != null) return false;
+				if (zone.plant != null) return false;
 		if (zone.isHostile) return false;
 
-		// 2. Soil check
-        if (plant.soilWhitelist != null && plant.soilWhitelist.length > 0)
+		        if (plant.soilWhitelist != null && plant.soilWhitelist.length > 0)
             if (!Lambda.exists(plant.soilWhitelist, s -> s == zone.env.soil))
 				return false;
 
-		// 3. Immediate env. checks – we’ll take *current* heat / water
-		var heat = zone.env.baseHeat; // you might want to add variance here
-        if (heat < plant.heatReq.min || heat > plant.heatReq.max)
+				var heat = zone.env.baseHeat;         if (heat < plant.heatReq.min || heat > plant.heatReq.max)
 			return false;
 
 		var water = zone.env.waterLevel;
         if (water < plant.waterReq.min || water > plant.waterReq.max)
 			return false;
 
-		// 4. Player owns the seed?
-        var owned = world.inventory.seeds.exists(plant) ? world.inventory.seeds.get(plant) : 0;
+		        var owned = world.inventory.seeds.exists(plant) ? world.inventory.seeds.get(plant) : 0;
 		if (owned <= 0) return false;
 
 		return true;
@@ -113,7 +105,9 @@ class ZoneService {
 			}
 		}
 
-		if (!z.isHostile) {
+						if (z.isHostile) {
+			out.push("Attack");
+		} else {
 			for (nid in z.neighbours)
 				if (world.zones[nid].isHostile) {
 					out.push("Attack");
@@ -134,13 +128,12 @@ class RandomService {
 			case Legendary:    1;
 		}
 
-    /** Roll exactly 3 random plant types the player may choose from */
+    
     public static function rollSeedPulls(pool:SeedPool):Array<PlantType> {
         var picks = new Array<PlantType>();
 		if (pool.catalog == null || pool.catalog.length == 0) return picks;
 
-		// Build cumulative weights
-		var cum:Array<Float> = [];
+				var cum:Array<Float> = [];
 		var total = 0.0;
         for (p in pool.catalog) {
             total += weightForRarity(p.rarity);
@@ -158,13 +151,7 @@ class RandomService {
 		return picks;
 	}
 
-	/**
-	 * Rolls *one* spawn check.  Returns true if an additional monster
-	 * should appear in that hostile zone this quarter-day.
-	 *
-	 * The chance is: 20 % +  5 % for every adjacent friendly zone that
-	 * has a plant (capped at 60 % total).
-	 */
+	
 	public static function rollMonsterSpawn(zone:TriZone, world:World):Bool {
 		if (!zone.isHostile || zone.monsters.length >= 3) return false;
 
@@ -178,22 +165,14 @@ class RandomService {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  A *callable* base event: instances can be used like a function
-//  (`event(world)`), matching the faulty call-site in WorldEngine.
-// ────────────────────────────────────────────────────────────────
 class BaseWorldEvent implements IWorldEvent {
 	@:call
 	public inline function invoke(w:World):Future
 		return changeWorld(w);
 
     public function changeWorld(world:World):Future
-        return Future.immediate(); // override in derived
-}
+        return Future.immediate(); }
 
-// ────────────────────────────────────────────────────────────────
-//  1.  Planting related events
-// ────────────────────────────────────────────────────────────────
 class PlantSeedEvent extends BaseWorldEvent {
 	public final zoneId:Int;
     public final plant:PlantType;
@@ -208,12 +187,10 @@ class PlantSeedEvent extends BaseWorldEvent {
         if (!PlantService.canPlant(plant, z, w))
             throw "Cannot plant " + plant.id + " on zone #" + zoneId;
 
-		// 1. Consume the seed item
-        if (!WorldTools.removeSeed(w, plant, 1))
+		        if (!WorldTools.removeSeed(w, plant, 1))
 			throw "Seed missing in inventory";
 
-		// 2. Instantiate the plant (still in Seed state)
-        var p = new PlantInstance(plant, zoneId);
+		        var p = new PlantInstance(plant, zoneId);
         p.state      = PlantState.Seed;
 		p.sunAccum   = 0;
 		p.ageQD      = 0;
@@ -226,8 +203,7 @@ class PlantSeedEvent extends BaseWorldEvent {
 
 class UpgradePlantEvent extends BaseWorldEvent {
 	public final zoneId:Int;
-	public final addHp:Int; // Very simple “fertiliser” upgrade
-
+	public final addHp:Int; 
     public function new(zoneId:Int, addHp:Int = 10) {
         this.zoneId = zoneId;
         this.addHp = addHp;
@@ -257,10 +233,6 @@ class RemovePlantEvent extends BaseWorldEvent {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  2.  Combat events (player-initiated, turn based)
-//      For simplicity we keep the combat state *inside the zone*.
-// ────────────────────────────────────────────────────────────────
 class InitiateCombatEvent extends BaseWorldEvent {
 	public final zoneId:Int;
     public function new(zoneId:Int) { this.zoneId = zoneId; }
@@ -269,19 +241,16 @@ class InitiateCombatEvent extends BaseWorldEvent {
 		var z = w.zones[zoneId];
 		if (!z.isHostile) throw "Zone not hostile";
 
-		// First monster in the list will be the opponent
-		if (z.monsters.length == 0) throw "No monster to fight";
+				if (z.monsters.length == 0) throw "No monster to fight";
 
-		// Flag the monster as the current target (we just annotate)
-        Reflect.setField(z.monsters[0], "_inCombat", true);
+		        Reflect.setField(z.monsters[0], "_inCombat", true);
         return Future.immediate();
 	}
 }
 
 class ExecuteAttackEvent extends BaseWorldEvent {
 	public final zoneId:Int;
-	public final attackId:String; // id of the AttackDef the player uses
-
+	public final attackId:String; 
 	public function new(zoneId:Int, attackId:String) {
 		this.zoneId  = zoneId;
 		this.attackId = attackId;
@@ -294,26 +263,22 @@ class ExecuteAttackEvent extends BaseWorldEvent {
 			if (Reflect.hasField(mon, "_inCombat")) { m = mon; break; }
 		if (m == null) throw "Combat was not initiated";
 
-		// 1. Find the attack on the mech
-		var atk:AttackDef = null;
+				var atk:AttackDef = null;
 		for (slot in w.player.weaponSlots)
 			for (a in slot.type.attacks)
 				if (a.id == attackId) { atk = a; break; }
 		if (atk == null) throw "Unknown attack id";
 
-		// 2. Pay costs
-		for (type => cost in atk.cost)
+				for (type => cost in atk.cost)
 			if (!WorldTools.removeResource(w, type, cost))
 				throw "Not enough " + Std.string(type);
 
-		// 3. Calculate damage
-		var dmg = atk.damage + w.player.currentStats.power - m.type.defense;
+				var dmg = atk.damage + w.player.currentStats.power - m.type.defense;
 		if (dmg < 0) dmg = 0;
 
 		m.hp -= dmg;
 		if (m.hp <= 0) {
-			// monster dies – give loot, de-hostilise zone if empty
-			for (entry in m.type.loot)
+						for (entry in m.type.loot)
 				if (Math.random() < entry.chance)
 					WorldTools.addMaterial(
 						w, entry.item.id, entry.min + Std.int(Math.random() * (entry.max - entry.min + 1)));
@@ -321,16 +286,14 @@ class ExecuteAttackEvent extends BaseWorldEvent {
 			z.monsters.remove(m);
 		}
 
-		// End of player turn – we will *immediately* schedule the enemy
-		// attack to keep the sample small
-		if (z.monsters.length > 0)
+						if (z.monsters.length > 0)
 			WorldEngine.enqueue(new MonsterTurnEvent(zoneId));
 
         return Future.immediate();
 	}
 }
 
-/** Simple single-attack retaliation of the first monster. */
+
 class MonsterTurnEvent extends BaseWorldEvent {
 	public final zoneId:Int;
     public function new(zoneId:Int) { this.zoneId = zoneId; }
@@ -342,14 +305,12 @@ class MonsterTurnEvent extends BaseWorldEvent {
 		var mon = z.monsters[0];
 		var atk = mon.type.attacks[Std.random(mon.type.attacks.length)];
 
-		// Monsters have no cost
-		var dmg = atk.damage - w.player.currentStats.defense;
+				var dmg = atk.damage - w.player.currentStats.defense;
 		if (dmg < 0) dmg = 0;
 
 		w.player.currentStats.hp -= dmg;
 		if (w.player.currentStats.hp <= 0)
-			throw "Player defeated!"; // Game over handler not part of backend demo
-
+			throw "Player defeated!"; 
         return Future.immediate();
 	}
 }
@@ -367,9 +328,6 @@ class EndCombatEvent extends BaseWorldEvent {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  3.  Resource & material bookkeeping
-// ────────────────────────────────────────────────────────────────
 class IncrementResourceEvent extends BaseWorldEvent {
 	public final t:ResourceType;
 	public final v:Int;
@@ -416,9 +374,6 @@ class RemoveMaterialEvent extends BaseWorldEvent {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  4.  Skill tree
-// ────────────────────────────────────────────────────────────────
 class ActivateSkillTreeNodeEvent extends BaseWorldEvent {
 	public final nodeId:String;
     public function new(nodeId) { this.nodeId = nodeId; }
@@ -431,8 +386,7 @@ class ActivateSkillTreeNodeEvent extends BaseWorldEvent {
 		if (w.player.skillTree.points < node.costPoints)
 			throw "Not enough skill points";
 
-		// Check prerequisites
-		for (pre in node.prerequisites)
+				for (pre in node.prerequisites)
 			if (!w.player.skillTree.nodes.get(pre).purchased)
 				throw "Missing prerequisite " + pre;
 
@@ -443,9 +397,6 @@ class ActivateSkillTreeNodeEvent extends BaseWorldEvent {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  5.  Crafting & equipment
-// ────────────────────────────────────────────────────────────────
 class CraftWeaponEvent extends BaseWorldEvent {
 	public final weaponType:WeaponType;
 	public final requiredMats:Map<MaterialType, Int>;
@@ -456,13 +407,11 @@ class CraftWeaponEvent extends BaseWorldEvent {
     }
 
 	override public function changeWorld(w:World):Future {
-		// Pay materials
-			for (mat => amt in requiredMats)
+					for (mat => amt in requiredMats)
 				if (!WorldTools.removeMaterial(w, mat, amt))
 					throw "Not enough material " + mat;
 
-		// Add new weapon to inventory (simply auto-equip in a free slot)
-		w.player.weaponSlots.push(new WeaponInstance(weaponType));
+				w.player.weaponSlots.push(new WeaponInstance(weaponType));
 		w.player.refresh();
         return Future.immediate();
 	}
@@ -495,9 +444,6 @@ class UpgradeWeaponEvent extends BaseWorldEvent {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  6.  Monster spawning / removal (world simulation side)
-// ────────────────────────────────────────────────────────────────
 class SpawnMonsterEvent extends BaseWorldEvent {
 	public final zoneId:Int;
 	public final monsterType:MonsterType;
@@ -525,22 +471,17 @@ class RemoveMonsterEvent extends BaseWorldEvent {
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  7.  Automatic raids (hostile overflow) – three-step events
-// ────────────────────────────────────────────────────────────────
 class InitiateRaidEvent extends BaseWorldEvent {
 	public final fromZone:Int;
 	public final targetZone:Int;
-	public var monster:Monster; // filled during changeWorld()
-
+	public var monster:Monster; 
     public function new(fromZone:Int, targetZone:Int) {
         this.fromZone = fromZone;
         this.targetZone = targetZone;
     }
 
 	override public function changeWorld(w:World):Future {
-		monster = w.zones[fromZone].monsters[1]; // 2nd monster = “overflow”
-		return Future.immediate();
+		monster = w.zones[fromZone].monsters[1]; 		return Future.immediate();
 	}
 }
 
@@ -554,17 +495,13 @@ class ExecuteRaidEvent extends BaseWorldEvent {
 		var p = targetZ.plant;
         if (p == null) return Future.immediate();
 
-		// Single hit = monster type's first attack damage
-		var dmg = raid.monster.type.attacks[0].damage;
+				var dmg = raid.monster.type.attacks[0].damage;
 		p.hp -= dmg;
 
 		if (p.hp <= 0) {
-			targetZ.plant = null; // plant destroyed
-			// monster “moves in” – i.e. zone becomes hostile again
-			targetZ.monsters.push(raid.monster);
+			targetZ.plant = null; 						targetZ.monsters.push(raid.monster);
 			raid.monster.zoneId = targetZ.id;
-			// remove from original zone
-			w.zones[raid.fromZone].monsters.remove(raid.monster);
+						w.zones[raid.fromZone].monsters.remove(raid.monster);
 		}
         return Future.immediate();
 	}
@@ -572,16 +509,11 @@ class ExecuteRaidEvent extends BaseWorldEvent {
 
 class EndRaidEvent extends BaseWorldEvent {
     override public function changeWorld(w:World):Future
-        return Future.immediate(); // nothing extra, just placeholder
-}
+        return Future.immediate(); }
 
-// ────────────────────────────────────────────────────────────────
-//  8.  Time progression
-// ────────────────────────────────────────────────────────────────
 class DayAdvanceEvent extends BaseWorldEvent {
 	override public function changeWorld(w:World):Future {
-		// 1. Quarter -> next
-		w.quarter = switch (w.quarter) {
+				w.quarter = switch (w.quarter) {
 			case Quarter.OccindentalRising: Quarter.Occindental;
 			case Quarter.Occindental:       Quarter.OrientalRising;
 			case Quarter.OrientalRising:    Quarter.Oriental;
@@ -590,25 +522,19 @@ class DayAdvanceEvent extends BaseWorldEvent {
 				Quarter.OccindentalRising;
 		}
 
-		// 2. Handle world simulation on each zone
-		for (z in w.zones) {
-			// 2.1 Weather progress
-			if (z.env.weatherPattern != null && z.env.weatherPattern.length > 0) {
+				for (z in w.zones) {
+						if (z.env.weatherPattern != null && z.env.weatherPattern.length > 0) {
 				var step = (w.dayCount * 4 + cast w.quarter) % z.env.weatherPattern.length;
 				z.env.currentWeather = z.env.weatherPattern[step];
 			}
 
-			// 2.2 Random monster spawns
-			if (RandomService.rollMonsterSpawn(z, w))
-				WorldEngine.enqueue(new SpawnMonsterEvent(z.id, z.monsters[0].type)); // reuse same monster type
-
-			// 2.3 Plant ageing / germination
-				if (z.plant != null)
+						if (RandomService.rollMonsterSpawn(z, w))
+				WorldEngine.enqueue(new SpawnMonsterEvent(z.id, z.monsters[0].type)); 
+							if (z.plant != null)
                 handlePlantQuarter(z, w);
 		}
 
-        // 3. Give the player the new “seed card pack”
-        var pulls = RandomService.rollSeedPulls(w.seedPool);
+                var pulls = RandomService.rollSeedPulls(w.seedPool);
         for (p in pulls)
             WorldTools.addSeed(w, p, 1);
 
@@ -625,27 +551,20 @@ class DayAdvanceEvent extends BaseWorldEvent {
             case PlantState.Seed:
 				p.sunAccum++;
 
-				// Germination check
-                if (p.sunAccum >= p.type.sunNeeded && p.ageQD >= p.type.germTimeQD)
+				                if (p.sunAccum >= p.type.sunNeeded && p.ageQD >= p.type.germTimeQD)
 					p.state = PlantState.Sprouted;
             case PlantState.Sprouted:
-				// OnDayTick effect only triggers at end of day
-				if (w.quarter == Quarter.Oriental && p.type.effect != null
+								if (w.quarter == Quarter.Oriental && p.type.effect != null
 					&& p.type.effect.kind == PlantEffectKind.OnDayTick)
 					for (rt => amt in p.type.effect.payload)
                         WorldTools.addResource(w, rt, amt);
 
-				// Cool-down reduction
-				if (p.cdLeft > 0) p.cdLeft--;
+								if (p.cdLeft > 0) p.cdLeft--;
             case PlantState.Dead:
-				// Nothing
-		}
+						}
 	}
 }
 
-// ────────────────────────────────────────────────────────────────
-//  9.  Environment tweaks
-// ────────────────────────────────────────────────────────────────
 class ChangeWeatherEvent extends BaseWorldEvent {
 	public final zoneId:Int;
 	public final weather:WeatherType;

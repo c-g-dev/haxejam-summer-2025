@@ -1,20 +1,17 @@
 Coro.tween
 
 Coro.step({
-    //block expr
-});
+    });
 
 converts to
 
-Coro.start((_) -> //block expr//).await();
-
+Coro.start((_) -> 
 
 
 
 add support for this syntax
 
-Coro.once({//expr block//})
-
+Coro.once({
 Coro.once({
     var a = "";
     ctx.store(a);

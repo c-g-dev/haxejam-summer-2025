@@ -57,7 +57,6 @@ class StartMenuState extends HState {
     }
 
     public function onUpdate(dt:Float) : Void {
-        // nothing for now
-    }
+            }
 
 }

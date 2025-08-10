@@ -7,7 +7,8 @@ var _ICONS = [
     "soil",
     "phosphorus",
     "nitrogen",
-    "potassium"
+    "potassium",
+    "monster"
 ];
 
 class Icons {

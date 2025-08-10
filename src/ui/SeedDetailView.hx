@@ -7,7 +7,6 @@ import ui.Icons;
 import data.Data.PlantType;
 import data.Data.Rarity;
 import data.Data.SoilType;
-// Feather icons replaced by bitmap icons from ui.Icons
 
 class SeedDetailView extends Object {
     var widthPx:Int;
@@ -47,14 +46,12 @@ class SeedDetailView extends Object {
     }
 
     public function setSeed(seed:PlantType, count:Int) {
-        // Title
-        title.text = seed.name + " (x" + count + ")";
+                title.text = seed.name + " (x" + count + ")";
         title.textColor = rarityColor(seed.rarity);
         title.x = Std.int((widthPx - title.textWidth * title.scaleX) / 2);
         title.y = 12;
 
-        // Image
-        var imgScale = Math.min((widthPx * 0.5) / image.tile.width, (heightPx * 0.35) / image.tile.height);
+                var imgScale = Math.min((widthPx * 0.5) / image.tile.width, (heightPx * 0.35) / image.tile.height);
         image.scaleX = imgScale;
         image.scaleY = imgScale;
         image.x = Std.int((widthPx - image.tile.width * imgScale) / 2);
@@ -86,12 +83,7 @@ class SeedDetailView extends Object {
 
     static function rarityColor(r:Rarity):Int {
         return switch (r) {
-            case Common:    0xB0C4DE; // light steel blue
-            case Uncommon:  0x67E480; // greenish
-            case Rare:      0x5EA0FF; // blue
-            case Epic:      0xC77DFF; // purple
-            case Legendary: 0xFFD700; // gold
-        }
+            case Common:    0xB0C4DE;             case Uncommon:  0x67E480;             case Rare:      0x5EA0FF;             case Epic:      0xC77DFF;             case Legendary: 0xFFD700;         }
     }
 
     static function sunText(sunNeeded:Int):String {

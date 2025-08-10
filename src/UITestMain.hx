@@ -1,3 +1,4 @@
+import state.PlanetaryState;
 import state.OpeningCutsceneState;
 import h2d.filter.Glow;
 import hxd.Window;
@@ -17,11 +18,11 @@ class UITestMain extends hxd.App {
 
        HStateManager.app = this;
          
-       var startMenu = new OpeningCutsceneState();
+             var startMenu = new OpeningCutsceneState();
        HStateManager.setState(startMenu);
 
-    //    lightning = new Lightning(s2d, 0, 0, Window.getInstance().width, Window.getInstance().height);
 
+    
        
 
     }
@@ -36,7 +37,6 @@ class UITestMain extends hxd.App {
 
     public function new() {
         super();
-        // Use default material setup to avoid PBR pipeline requirements during the test
         h3d.mat.MaterialSetup.current = new h3d.mat.PbrMaterialSetup();
     }
 }

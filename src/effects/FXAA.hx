@@ -5,18 +5,14 @@ import h2d.RenderContext;
 
 
 class FXAAShader extends h3d.shader.ScreenShader {
-    //---------------------------------------------------------------------------
-    
+        
     static var SRC = {
     
         @param var inverseScreenSize : Vec2;
         @param var texture0          : Sampler2D;
     
         /*  user controllable 0–1 parameters (supplied by the wrapper)  */
-        @param var spanMul      : Float;   // default 1/8  (= 0.125)
-        @param var reduceMinInv : Float;   // default 128  ( = 1 / 0.0078125 )
-        @param var blendStrength: Float;   // 0 = off, 1 = normal, >1 = over-blend
-    
+        @param var spanMul      : Float;           @param var reduceMinInv : Float;           @param var blendStrength: Float;       
         function luma(c:Vec3):Float {
             return dot(c, vec3(0.299, 0.587, 0.114));
         }
@@ -66,8 +62,7 @@ class FXAAShader extends h3d.shader.ScreenShader {
             /*              final colour                                     */
             var result : Vec3;
             if ( (lumaAvg <= lumaMin) || (lumaAvg >= lumaMax) )
-                result = rgbM;              // keep original
-            else
+                result = rgbM;                          else
                 result = mix(rgbM, rgbAvg, blendStrength);
     
             output.color = vec4(result, 1.0);
@@ -82,10 +77,7 @@ h2d filter wrapper around FXAAShader so you can do:
 scene.addFilter( new fx.FXAAFilter() );
 */
 class FXAAFilter extends Shader<FXAAShader> {
-    public var spanMul      : Float   = 1.0 / 8.0;  // search distance
-    public var reduceMinInv : Float   = 128.0; // accept lower-contrast edges
-    public var blendStrength: Float   = 1.0; // how much to blend
-    
+    public var spanMul      : Float   = 1.0 / 8.0;      public var reduceMinInv : Float   = 128.0;     public var blendStrength: Float   = 1.0;     
     public function new() {
         super(new FXAAShader(), "texture0");
     }

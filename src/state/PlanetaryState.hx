@@ -21,6 +21,9 @@ import space.SpaceEffects;
 import space.Stars;
 import ludi.heaps.form.controls.FormButton;
 import ludi.heaps.box.Box;
+import hxd.snd.Channel;
+import ui.ZoneInfoPanel;
+import state.CombatState; import engine.EventImpl.InitiateCombatEvent; import state.HState.HStateTransitionFadeManager;
 
 enum PlanetaryMode {
     Idle;
@@ -38,26 +41,29 @@ class PlanetaryState extends HState {
     var input: PlanetaryStateControls;
     var effects: SpaceEffects;
     var stars: Stars;
+    var bgmChannel: Channel;
+    var zonePanel: ZoneInfoPanel;
 
     var currentTri: Int = 0;
     var mode: PlanetaryMode = Idle;
 
-    // Action menu state
-    var menuCircler: UICircler;
+        var menuCircler: UICircler;
     var menuNav: ArrowNav;
     var menuChoices: Array<WorldActionChoice>;
 
-    // Seed list UI (debug/inventory)debug
-    var seedList: SeedListView;
-    // Cache of adjacents for current tri to avoid rebuilding arrays
-    var currentAdjacents: Array<Int> = [];
+        var seedList: SeedListView;
+        var currentAdjacents: Array<Int> = [];
     var rotateButton: Box;
 
     function setup(): Void {
+                if (HStateTransitionFadeManager.isBlackScreenVisible()) {
+            HStateTransitionFadeManager.blackScreen.alpha = 0;
+            HStateTransitionFadeManager.detach();
+        }
+        this.app.s2d.filter = null;
         input = new PlanetaryStateControls();
 
-        // Ensure a world exists
-        if (Game.world == null) {
+                if (Game.world == null) {
             Game.seedInitialWorld();
             WorldEngine.world = Game.world;
         }
@@ -65,13 +71,22 @@ class PlanetaryState extends HState {
         dirLight = new DirLight(new h3d.Vector(0.5, 0.5, -0.5), this.app.s3d);
         dirLight.enableSpecular = true;
 
-        // Background sky dome
-        stars = new Stars(this.app.s3d, this.app.s3d.camera);
+                stars = new Stars(this.app.s3d, this.app.s3d.camera);
 
         planet = new Planet(this.app.s3d, this.app.s2d, this.app.s3d.camera);
 
         this.app.s3d.camera.pos.set(0, 0, 5); 
         this.app.s3d.camera.target.set(0, 0, 0);
+
+                currentTri = 0;
+        var tri0 = planet.getTriangleCenter(currentTri);
+        if (tri0 != null) {
+            var dist = this.app.s3d.camera.pos.length();
+            var target = tri0.clone(); target.scale(dist);
+            this.app.s3d.camera.pos.load(target);
+            this.app.s3d.camera.update();
+            planet.cameraMover.currentTarget = tri0;
+        }
 
         sun = new Sun(this.app.s3d);
 
@@ -80,8 +95,17 @@ class PlanetaryState extends HState {
 
         effects = new SpaceEffects(planet);
 
-        // Bottom-right rotate button
-        rotateButton = new FormButton("Rotate 90°");
+                if (bgmChannel == null) {
+            bgmChannel = hxd.Res.load("sounds/bgm.mp3").toSound().play(true, 0.15);
+        }
+
+                zonePanel = new ZoneInfoPanel(280, this.app.s2d.height);
+        zonePanel.x = this.app.s2d.width - zonePanel.totalWidth;
+        zonePanel.y = 0;
+        this.app.s2d.addChild(zonePanel);
+        zonePanel.setZone(Game.world, currentTri);
+
+                rotateButton = new FormButton("Advance Day");
         this.app.s2d.addChild(rotateButton);
         positionRotateButton();
         rotateButton.onClick((_) -> {
@@ -92,14 +116,11 @@ class PlanetaryState extends HState {
             });
         });
 
-        // Create seed list UI docked on right side
-        seedList = new SeedListView(360, this.app.s2d.height);
+                seedList = new SeedListView(360, this.app.s2d.height);
         seedList.x = this.app.s2d.width - seedList.totalWidth;
         seedList.y = 0;
-     //   this.app.s2d.addChild(seedList);
-
-        // Initial overlay paint
-        refreshTriZoneOverlays();
+     
+                refreshTriZoneOverlays();
     }
 
     public function lifecycle(e:HStateLifeCycle):Future<Dynamic> {
@@ -121,6 +142,10 @@ class PlanetaryState extends HState {
                     this.app.s3d.removeChild(stars);
                     stars = null;
                 }
+                if (bgmChannel != null) {
+                    bgmChannel.stop();
+                    bgmChannel = null;
+                }
                 if (overlay != null) {
                     this.app.s2d.removeChild(overlay);
                     overlay = null;
@@ -132,6 +157,10 @@ class PlanetaryState extends HState {
                 if (seedList != null) {
                     this.app.s2d.removeChild(seedList);
                     seedList = null;
+                }
+                if (zonePanel != null) {
+                    this.app.s2d.removeChild(zonePanel);
+                    zonePanel = null;
                 }
                 if (sun != null) {
                     this.app.s3d.removeChild(sun);
@@ -150,8 +179,7 @@ class PlanetaryState extends HState {
         }
     }
 
-    // Pick adjacent triangle whose on-screen direction from current center best matches (dirX, dirY) in NDC
-    function findNeighborInDirection(dirX: Float, dirY: Float): Int {
+        function findNeighborInDirection(dirX: Float, dirY: Float): Int {
         var neighbors = planet.adjMap.get(currentTri);
         if (neighbors == null || neighbors.length == 0) return -1;
 
@@ -197,14 +225,12 @@ class PlanetaryState extends HState {
         menuCircler = new UICircler(this.app.s2d, cx, cy, 140);
         menuChoices = [];
 
-        // Build actions from ZoneService using the current triangle as zone id
-        var zoneId = currentTri;
+                var zoneId = currentTri;
         var world = Game.world;
         var zone = world.zones[zoneId];
         var labels = ZoneService.getPlayerActionsOnZone(zone, world);
         if (labels == null || labels.length == 0) {
-            // Nothing to show
-            menuCircler.remove();
+                        menuCircler.remove();
             menuCircler = null;
             menuNav = null;
             return;
@@ -217,6 +243,9 @@ class PlanetaryState extends HState {
                 closeActionMenu();
                 if (lbl == "Plant Seed") {
                     this.openSubState(new SelectSeedSubstate(zoneId));
+                } else if (lbl == "Attack") {
+                                        WorldEngine.enqueue(new InitiateCombatEvent(zoneId));
+                    this.openSubState(new CombatState(zoneId));
                 }
             };
             menuChoices.push(choice);
@@ -236,8 +265,7 @@ class PlanetaryState extends HState {
         }
 
         mode = MenusOpen;
-        // Fire the entrance animation; we do not block input while animating
-        menuCircler.start();
+                menuCircler.start();
     }
 
     function closeActionMenu():Void {
@@ -266,8 +294,8 @@ class PlanetaryState extends HState {
                         mode = CameraPanning;
                         planet.cameraMover.moveToTriangle(currentTri, 2).then((_) -> {
                             mode = Idle;
-                            // After camera move completes, refresh overlays
-                            refreshTriZoneOverlays();
+                                                        refreshTriZoneOverlays();
+                            if (zonePanel != null) zonePanel.setZone(Game.world, currentTri);
                         });
                     }
                 }
@@ -285,50 +313,38 @@ class PlanetaryState extends HState {
 
         if (seedList != null) seedList.update(dt);
 
-        // Sky follows camera in its own sync
-
-        // Update tints/highlights each frame in case world changes or selection moved
-        refreshTriZoneOverlays();
+        
+                refreshTriZoneOverlays();
+        if (zonePanel != null) zonePanel.setZone(Game.world, currentTri);
     }
 
-    // Recompute hostile red fills and friendly-adjacent glow from currentTri
-    function refreshTriZoneOverlays(): Void {
+        function refreshTriZoneOverlays(): Void {
         if (planet == null) return;
         var world = Game.world;
         if (world == null || world.zones == null || world.zones.length == 0) return;
 
-        // Clear all overlays first
-        planet.clearTriOverlays();
+                planet.clearTriOverlays();
 
-        // 1) Hostile zones -> solid/semi-transparent red fill
-        // 2) Friendly adjacent to currentTri -> soft glow
-        // Note: use labels length as authoritative number of trizones drawn on sphere
-        var total = world.zones.length;
-        if (total > 80) total = 80; // safety; sphere has 80 subfaces
-
-        // Mark hostile across all indices
-        for (i in 0...total) {
+                                var total = world.zones.length;
+        if (total > 80) total = 80; 
+                for (i in 0...total) {
             var z = world.zones[i];
             if (z != null && z.isHostile) {
-                // Red with some transparency so base texture shows through
-                planet.colorTriOverlay(i, 1.0, 0.0, 0.0, 0.35);
+                                planet.colorTriOverlay(i, 1.0, 0.0, 0.0, 0.35);
             }
         }
 
-        // Friendly-adjacent glow: neighbors of currentTri that are not hostile
-        currentAdjacents = planet.adjMap.get(currentTri);
+                currentAdjacents = planet.adjMap.get(currentTri);
         if (currentAdjacents != null) {
             for (nid in currentAdjacents) {
                 if (nid < 0 || nid >= total) continue;
                 var nz = world.zones[nid];
                 if (nz == null || nz.isHostile) continue;
-                // Soft light blue-ish glow, add on top of any red? No: red means hostile, skip
-                planet.colorTriOverlay(nid, 0.4, 0.8, 1.0, 0.25);
+                                planet.colorTriOverlay(nid, 0.4, 0.8, 1.0, 0.25);
             }
         }
 
-        // Highlight current triangle subtly for verification
-        if (currentTri >= 0 && currentTri < total)
+                if (currentTri >= 0 && currentTri < total)
             planet.colorTriOverlay(currentTri, 0.0, 1.0, 0.0, 0.3);
     }
 

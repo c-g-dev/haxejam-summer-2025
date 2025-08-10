@@ -1,32 +1,19 @@
 package ludi.heaps.screen;
 
 enum ScreenTimelineAction {
-    Screen(screen: Screen);            // Displays a screen
-    Transition(transition: ScreenTransition); // Sets a transition for the next screen
-    Clear;                            // Clears the timeline
-    Label(label: String);             // Marks a point in the timeline
-    Goto(label: String);              // Jumps to a labeled point
-    Do(cb: ScreenTimeline -> Void);   // Executes a callback
-}
+    Screen(screen: Screen);                Transition(transition: ScreenTransition);     Clear;                                Label(label: String);                 Goto(label: String);                  Do(cb: ScreenTimeline -> Void);   }
 
 class ScreenTimeline {
-    var actions: Array<ScreenTimelineAction>;  // List of timeline actions
-    var history: Array<ScreenTimelineAction>;  // History of visited screens
-    var currentIndex: Int;                     // Current position in the timeline
-    var labels: Map<String, Int>;              // Maps labels to action indices
-    var currentTransition: ScreenTransition;   // Transition for the next screen
-    var backTransition: ScreenTransition;      // Default transition for going back
-
+    var actions: Array<ScreenTimelineAction>;      var history: Array<ScreenTimelineAction>;      var currentIndex: Int;                         var labels: Map<String, Int>;                  var currentTransition: ScreenTransition;       var backTransition: ScreenTransition;      
     public function new(initialActions: Array<ScreenTimelineAction>) {
         this.actions = initialActions;
         this.history = [];
         this.currentIndex = -1;
         this.labels = new Map();
         this.currentTransition = null;
-        this.backTransition = new FadeTransition(0.5, 0.5); // Default back transition
-    }
+        this.backTransition = new FadeTransition(0.5, 0.5);     }
 
-    /** Advances to the next action in the timeline. */
+    
     public function next(): Void {
         if (currentIndex + 1 < actions.length) {
             currentIndex++;
@@ -34,15 +21,13 @@ class ScreenTimeline {
         }
     }
 
-    /** Goes back to the previous screen in the history. */
+    
     public function back(): Void {
         if (history.length > 1) {
-            history.pop(); // Remove current screen
-            var prevAction = history[history.length - 1];
+            history.pop();             var prevAction = history[history.length - 1];
             switch (prevAction) {
                 case Screen(screen):
-                    // Update currentIndex to match the previous screen
-                    for (i in 0...actions.length) {
+                                        for (i in 0...actions.length) {
                         if (actions[i] == prevAction) {
                             currentIndex = i;
                             break;
@@ -54,29 +39,27 @@ class ScreenTimeline {
         }
     }
 
-    /** Pushes a new screen onto the timeline and displays it. */
+    
     public function push(screen: Screen): Void {
         actions.push(Screen(screen));
         currentIndex = actions.length - 1;
         executeAction(Screen(screen));
     }
 
-    /** Checks if there’s a next action in the timeline. */
+    
     public function hasNext(): Bool {
         return currentIndex + 1 < actions.length;
     }
 
-    /** Executes the given timeline action. */
+    
     private function executeAction(action: ScreenTimelineAction): Void {
         switch (action) {
             case Screen(screen):
                 history.push(action);
                 ScreenManager.switchTo(screen, currentTransition);
-                currentTransition = null; // Reset after use
-            case Transition(transition):
+                currentTransition = null;             case Transition(transition):
                 currentTransition = transition;
-                next(); // Proceed to next action
-            case Clear:
+                next();             case Clear:
                 actions = [];
                 history = [];
                 currentIndex = -1;
@@ -86,8 +69,7 @@ class ScreenTimeline {
                 next();
             case Goto(label):
                 if (labels.exists(label)) {
-                    currentIndex = labels.get(label) - 1; // Set to jump on next()
-                    next();
+                    currentIndex = labels.get(label) - 1;                     next();
                 } else {
                     next();
                 }

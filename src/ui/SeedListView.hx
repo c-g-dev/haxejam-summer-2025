@@ -45,8 +45,7 @@ class SeedListItem extends h2d.Object {
     }
 
     function updateLayout() {
-        // Ensure the item reports its full bounds to the layout
-        bg.clear();
+                bg.clear();
         bg.beginFill(0x000000, 0);
         bg.drawRect(0, 0, rowWidth, rowHeight);
         bg.endFill();
@@ -111,8 +110,7 @@ class SeedListView extends h2d.Object {
         root.backgroundColor(0x1E1E1E);
         addChild(root.get());
 
-        // Header bar
-        var headerH = 44;
+                var headerH = 44;
         var footerH = 36;
         var listW = Std.int(width * 0.45);
         var detailW = Std.int(width * 0.55);
@@ -131,8 +129,7 @@ class SeedListView extends h2d.Object {
         headerTitle.x = 12;
         headerTitle.y = Std.int((headerH - headerTitle.textHeight * 0.35) / 2);
 
-        // Footer bar
-        var fb = Box.build(Std.int(width), footerH);
+                var fb = Box.build(Std.int(width), footerH);
         fb.verticalGradient(0x1F2A30, 0x151A1E);
         fb.roundedCorners(0);
         footerBox = fb.get();
@@ -147,14 +144,12 @@ class SeedListView extends h2d.Object {
         footerHint.x = 12;
         footerHint.y = Std.int((footerH - footerHint.textHeight * 0.3) / 2);
 
-        // Left: list (below header, above footer)
-        listBox = new NavScrollBox(listW, Std.int(height - headerH - footerH));
+                listBox = new NavScrollBox(listW, Std.int(height - headerH - footerH));
         listBox.addPlugin(new ludi.heaps.box.Plugins.BackgroundColorPlugin(0x262626));
         root.get().addChild(listBox);
         listBox.y = headerH;
 
-        // Right: detail panel
-        var db = Box.build(detailW, Std.int(height - headerH - footerH));
+                var db = Box.build(detailW, Std.int(height - headerH - footerH));
         db.backgroundColor(0x202020);
         db.verticalGradient(0x2A2A2A, 0x151515);
         db.roundedCorners(6);

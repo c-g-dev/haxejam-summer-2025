@@ -10,25 +10,19 @@ enum ArrowNavEvent {
 }
 
 class ArrowNav {
-    var nodes: Map<Object, ArrowNavNode<Dynamic>> = new Map(); // Maps objects to their nodes
-    var currentSelection: Object = null;                       // Tracks the currently selected object
-
+    var nodes: Map<Object, ArrowNavNode<Dynamic>> = new Map();     var currentSelection: Object = null;                       
     public function new() {}
 
-    // Bind an object to the navigation system
-    public function bind<T>(obj: Object, onEvent: ArrowNavEvent -> Void): ArrowNavNode<T> {
-        var node = new ArrowNavNode<T>(obj, onEvent, obj); // Add node as child of obj
-        nodes.set(obj, node);
-        // Set the first bound object as the initial selection
-        if (currentSelection == null) {
+        public function bind<T>(obj: Object, onEvent: ArrowNavEvent -> Void): ArrowNavNode<T> {
+        var node = new ArrowNavNode<T>(obj, onEvent, obj);         nodes.set(obj, node);
+                if (currentSelection == null) {
             currentSelection = obj;
             node.onEvent(Enter);
         }
         return node;
     }
 
-    // Update the current selection and trigger events
-    function setSelection(newSelection: Object) {
+        function setSelection(newSelection: Object) {
         if (currentSelection == newSelection) return;
         if (currentSelection != null) {
             var prevNode = nodes.get(currentSelection);
@@ -45,8 +39,7 @@ class ArrowNav {
         }
     }
 
-    // Trigger the Selected event for the current selection
-    function selectCurrent() {
+        function selectCurrent() {
         if (currentSelection != null) {
             var node = nodes.get(currentSelection);
             if (node != null) {
@@ -55,8 +48,7 @@ class ArrowNav {
         }
     }
 
-    // Handle keyboard input and update the selection
-    public function update() {
+        public function update() {
         if (Key.isPressed(Key.RIGHT)) {
             var next = getNextItem(Right);
             if (next != null) setSelection(next);
@@ -74,17 +66,14 @@ class ArrowNav {
         }
     }
 
-    // Calculate the next object based on direction and positions
-    function getNextItem(direction: Direction): Object {
+        function getNextItem(direction: Direction): Object {
         if (currentSelection == null) return null;
         var currentPos = currentSelection.getAbsPos();
         var cx = currentPos.x;
         var cy = currentPos.y;
 
         var best: Object = null;
-        var bestScore1: Float = Math.POSITIVE_INFINITY; // Primary score (alignment)
-        var bestScore2: Float = Math.POSITIVE_INFINITY; // Secondary score (distance)
-
+        var bestScore1: Float = Math.POSITIVE_INFINITY;         var bestScore2: Float = Math.POSITIVE_INFINITY; 
         for (obj in nodes.keys()) {
             if (obj == currentSelection) continue;
             var pos = obj.getAbsPos();
@@ -96,33 +85,26 @@ class ArrowNav {
             switch direction {
                 case Right:
                     if (x <= cx) continue;
-                    score1 = Math.abs(y - cy); // Vertical alignment
-                    score2 = x - cx;          // Horizontal distance
-                case Left:
+                    score1 = Math.abs(y - cy);                     score2 = x - cx;                          case Left:
                     if (x >= cx) continue;
                     score1 = Math.abs(y - cy);
                     score2 = cx - x;
                 case Down:
                     if (y <= cy) continue;
-                    score1 = Math.abs(x - cx); // Horizontal alignment
-                    score2 = y - cy;          // Vertical distance
-                case Up:
+                    score1 = Math.abs(x - cx);                     score2 = y - cy;                          case Up:
                     if (y >= cy) continue;
                     score1 = Math.abs(x - cx);
                     score2 = cy - y;
             }
-            // Update best candidate if this one has a better score
-            if (score1 < bestScore1 || (score1 == bestScore1 && score2 < bestScore2)) {
+                        if (score1 < bestScore1 || (score1 == bestScore1 && score2 < bestScore2)) {
                 best = obj;
                 bestScore1 = score1;
                 bestScore2 = score2;
             }
         }
-        return best != null ? best : currentSelection; // Stay on current if no candidate found
-    }
+        return best != null ? best : currentSelection;     }
 }
 
-// Direction enum for navigation
 enum Direction {
     Up;
     Down;
@@ -131,8 +113,7 @@ enum Direction {
 }
 
 class ArrowNavNode<T> extends Node {
-    public var obj: Object; // The bound h2d.Object
-    var onEventCallback: ArrowNavEvent -> Void;
+    public var obj: Object;     var onEventCallback: ArrowNavEvent -> Void;
 
     public function new(obj: Object, onEvent: ArrowNavEvent -> Void, ?parent: Object) {
         super(parent);
@@ -140,8 +121,7 @@ class ArrowNavNode<T> extends Node {
         this.onEventCallback = onEvent;
     }
 
-    // Handle events by invoking the callback
-    public function onEvent(e: ArrowNavEvent) {
+        public function onEvent(e: ArrowNavEvent) {
         onEventCallback(e);
     }
 }

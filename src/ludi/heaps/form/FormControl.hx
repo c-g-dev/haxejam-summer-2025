@@ -40,8 +40,7 @@ abstract class FormControlPair<T = Dynamic> extends HBox {
         label.text = text + ":";
         label.textColor = 0x000000;
         label.smooth = true;
-        //label.setScale(20 / label.font.size);
-        return label;
+                return label;
     }
 
     public function getControl(): h2d.Object {

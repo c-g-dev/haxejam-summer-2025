@@ -12,12 +12,8 @@ import ludi.heaps.form.controls.FormButton;
 import ludi.heaps.box.Box;
 import effects.Lightning;
 import hxd.res.DefaultFont;
+import engine.Game;
 
-//when it is the players turn, the weapon buttons are a nav that are choosable
-//when it is the enemy turn, the enemy will attack the player with a random weapon
-//there should be a weapon attack animation class that returns a future that resolves when the animation is done
-//add a basic animation class for default
-//when damage is done to a combatant, a little number should pop up on their portait and then fade out
 
 enum CombatTurn { Player; Enemy; }
 
@@ -25,8 +21,7 @@ class CombatState extends HState {
     var root: h2d.Object;
     var nav: ArrowNav;
 
-    // Full-body portrait groups and bitmaps
-    var playerGroup: h2d.Object;
+        var playerGroup: h2d.Object;
     var enemyGroup: h2d.Object;
     var playerBmp: h2d.Bitmap;
     var enemyBmp: h2d.Bitmap;
@@ -34,16 +29,13 @@ class CombatState extends HState {
     var playerHp:Int = 100;
     var enemyHp:Int = 100;
 
-    // HP bars replace text labels
-    var playerHpBar: HpBar;
+        var playerHpBar: HpBar;
     var enemyHpBar: HpBar;
 
-    // HP labels above bars
-    var playerHpLabel: h2d.Text;
+        var playerHpLabel: h2d.Text;
     var enemyHpLabel: h2d.Text;
 
-    // Names at the top
-    var playerNameText: h2d.Text;
+        var playerNameText: h2d.Text;
     var enemyNameText: h2d.Text;
     var playerName:String = "Player";
     var enemyName:String = "Enemy";
@@ -55,35 +47,37 @@ class CombatState extends HState {
 
     var turn: CombatTurn = Player;
 
-    // Diagonal split backgrounds
-    var bgBase:h2d.Graphics;
+        var bgBase:h2d.Graphics;
     var bgOverlay:h2d.Graphics;
     var bgW:Int = -1;
     var bgH:Int = -1;
 
-    // Diagonal masks for portraits
-    var playerMaskG: h2d.Graphics;
+        var playerMaskG: h2d.Graphics;
     var enemyMaskG: h2d.Graphics;
+
+        var zoneId:Int;
+
+    public function new(zoneId:Int) {
+        super();
+        this.zoneId = zoneId;
+    }
 
     function setup(): Void {
         root = new h2d.Object();
         this.app.s2d.add(root);
 
-        // Backgrounds split along the same diagonal used by lightning (with 24px inset)
-        bgBase = new h2d.Graphics(root);
+                bgBase = new h2d.Graphics(root);
         bgOverlay = new h2d.Graphics(root);
         redrawBackgrounds();
 
-        // Diagonal lightning backdrop
-        lightning = new Lightning(root, 24, this.app.s2d.height - 24, this.app.s2d.width - 24, 24);
+                lightning = new Lightning(root, 24, this.app.s2d.height - 24, this.app.s2d.width - 24, 24);
         lightning.glowRadius = 18;
         lightning.segments = 22;
         lightning.lineColor = 0x66CCFF;
         lightning.thickness = 2;
         lightning.glow();
 
-        // Names at the top
-        playerNameText = new h2d.Text(DefaultFont.get(), root);
+                playerNameText = new h2d.Text(DefaultFont.get(), root);
         playerNameText.textColor = 0xE8F0FF;
         playerNameText.text = playerName;
         playerNameText.x = 24;
@@ -95,23 +89,19 @@ class CombatState extends HState {
         enemyNameText.y = 8;
         enemyNameText.x = this.app.s2d.width - enemyNameText.textWidth - 24;
 
-        // Full-body portraits
-        playerGroup = new h2d.Object(root);
+                playerGroup = new h2d.Object(root);
         enemyGroup = new h2d.Object(root);
 
-        // Load example portrait images from resources
-        playerBmp = new h2d.Bitmap(hxd.Res.guy.toTile(), playerGroup);
-        enemyBmp = new h2d.Bitmap(hxd.Res.guy2.toTile(), enemyGroup);
+                playerBmp = new h2d.Bitmap(hxd.Res.guy1.toTile(), playerGroup);
+        enemyBmp = new h2d.Bitmap(hxd.Res.enemies.wdebp.toTile(), enemyGroup);
 
-        // Create and apply diagonal masks
-        playerMaskG = new h2d.Graphics(root);
+                playerMaskG = new h2d.Graphics(root);
         enemyMaskG = new h2d.Graphics(root);
         playerGroup.filter = new h2d.filter.Mask(playerMaskG, false, true);
         enemyGroup.filter = new h2d.filter.Mask(enemyMaskG, false, true);
         redrawMasks();
 
-        // HP bars (under names at top)
-        var barW = Std.int(Math.min(300, Math.max(180, this.app.s2d.width * 0.28)));
+                var barW = Std.int(Math.min(300, Math.max(180, this.app.s2d.width * 0.28)));
         playerHpBar = new HpBar(root, barW, 10, 0x1C1C1C, 0x00FF66, 0x000000);
         enemyHpBar = new HpBar(root, barW, 10, 0x1C1C1C, 0xFF6666, 0x000000);
         playerHpBar.setMax(100);
@@ -119,19 +109,16 @@ class CombatState extends HState {
         enemyHpBar.setMax(100);
         enemyHpBar.setValue(enemyHp);
 
-        // HP labels above bars
-        playerHpLabel = new h2d.Text(DefaultFont.get(), root);
+                playerHpLabel = new h2d.Text(DefaultFont.get(), root);
         playerHpLabel.textColor = 0xE8F0FF;
         enemyHpLabel = new h2d.Text(DefaultFont.get(), root);
         enemyHpLabel.textColor = 0xE8F0FF;
         refreshHpBars();
 
-        // Initial layout for portraits and bars
-        layoutPortraits();
+                layoutPortraits();
         positionBarsAndLabels();
 
-        // Player weapon buttons (navigable)
-        nav = new ArrowNav();
+                nav = new ArrowNav();
         var bx = 24;
         var by = playerHpBar.y + playerHpBar.height() + 16;
         var spacing = 8;
@@ -142,13 +129,11 @@ class CombatState extends HState {
             btn.x = bx;
             btn.y = by + i * (btn.height + spacing);
 
-            // Mouse click still works
-            btn.onClick(_ -> {
+                        btn.onClick(_ -> {
                 if (turn == Player) playerAttack(label);
             });
 
-            // ArrowNav select
-            nav.bind(btn, (e:ArrowNavEvent) -> {
+                        nav.bind(btn, (e:ArrowNavEvent) -> {
                 switch e {
                     case Selected:
                         if (turn == Player) playerAttack(label);
@@ -172,31 +157,44 @@ class CombatState extends HState {
 
     function playerAttack(weapon:String): Void {
         if (turn != Player) return;
-        turn = Enemy; // lock input until sequence completes
-
+        turn = Enemy; 
         var p = portraitCenterBmp(playerBmp);
         var e = portraitCenterBmp(enemyBmp);
 
         Coro.start((ctx: CoroutineContext) -> {
-            // Attack FX -> damage -> popup
-            AttackFx.lightning(root, p.x, p.y, e.x, e.y, 0.45).await();
-            var dmg = 8 + Std.random(9); // 8..16
-            var newEnemyHp = enemyHp - dmg;
+                        AttackFx.lightning(root, p.x, p.y, e.x, e.y, 0.45).await();
+            var dmg = 8 + Std.random(9);             var newEnemyHp = enemyHp - dmg;
             enemyHp = (newEnemyHp < 0) ? 0 : newEnemyHp;
             refreshHpBars();
             DamagePopup.show(root, '-' + dmg, e.x, enemyBmp.y - 8).await();
 
             if (enemyHp <= 0) {
-                // End combat (for now just exit the state if a parent exists)
-                exitState();
+                onEnemyDefeated();
+                                exitState();
                 return Stop;
             }
 
-            // Enemy turn
-            enemyTurn().await();
+                        enemyTurn().await();
             turn = Player;
             return Stop;
         });
+    }
+
+    function onEnemyDefeated():Void {
+        var w = Game.world;
+        var z = w != null ? w.zones[zoneId] : null;
+        if (z == null) return;
+        var removed = false;
+                for (m in z.monsters) {
+            if (Reflect.hasField(m, "_inCombat")) {
+                z.monsters.remove(m);
+                removed = true;
+                break;
+            }
+        }
+        if (!removed && z.monsters.length > 0) {
+            z.monsters.shift();
+        }
     }
 
     function enemyTurn(): Future {
@@ -206,8 +204,7 @@ class CombatState extends HState {
             var p = portraitCenterBmp(playerBmp);
             var e = portraitCenterBmp(enemyBmp);
             AttackFx.lightning(root, e.x, e.y, p.x, p.y, 0.45).await();
-            var dmg = 6 + Std.random(7); // 6..12
-            var newPlayerHp = playerHp - dmg;
+            var dmg = 6 + Std.random(7);             var newPlayerHp = playerHp - dmg;
             playerHp = (newPlayerHp < 0) ? 0 : newPlayerHp;
             refreshHpBars();
             DamagePopup.show(root, '-' + dmg, p.x, playerBmp.y - 8).await();
@@ -244,15 +241,13 @@ class CombatState extends HState {
 
     public function onUpdate(dt:Float): Void {
         if (turn == Player && nav != null) nav.update();
-        // keep backdrop lightning endpoints anchored to corners
-        if (lightning != null) {
+                if (lightning != null) {
             lightning.startX = 24;
             lightning.startY = this.app.s2d.height - 24;
             lightning.endX = this.app.s2d.width - 24;
             lightning.endY = 24;
         }
-        // keep the diagonal backgrounds, masks, names anchored
-        var w = Std.int(this.app.s2d.width);
+                var w = Std.int(this.app.s2d.width);
         var h = Std.int(this.app.s2d.height);
         if (w != bgW || h != bgH) {
             redrawBackgrounds();
@@ -285,8 +280,7 @@ class CombatState extends HState {
 
         bgOverlay.clear();
         bgOverlay.beginFill(0x15202B, 1);
-        // polygon covering the upper-left half separated by the inset diagonal
-        bgOverlay.moveTo(0, 0);
+                bgOverlay.moveTo(0, 0);
         bgOverlay.lineTo(w - 24, 24);
         bgOverlay.lineTo(24, h - 24);
         bgOverlay.lineTo(0, h);
@@ -323,14 +317,11 @@ class CombatState extends HState {
         var w = this.app.s2d.width;
         var h = this.app.s2d.height;
         var margin = 24.0;
-        // scale to fit height mostly
-        var targetH = h - margin * 2 - 48; // leave room at top/bottom
-        var scaleP = targetH / playerBmp.tile.height;
+                var targetH = h - margin * 2 - 48;         var scaleP = targetH / playerBmp.tile.height;
         var scaleE = targetH / enemyBmp.tile.height;
         playerBmp.scaleX = playerBmp.scaleY = scaleP;
         enemyBmp.scaleX = enemyBmp.scaleY = scaleE;
-        // position near sides, bottom aligned
-        playerBmp.x = margin;
+                playerBmp.x = margin;
         playerBmp.y = h - margin - playerBmp.height;
         enemyBmp.x = w - margin - enemyBmp.width;
         enemyBmp.y = h - margin - enemyBmp.height;
@@ -346,8 +337,7 @@ class CombatState extends HState {
     }
 
     inline function updateHpLabelPositions():Void {
-        // center labels horizontally over their respective bars
-        if (playerHpLabel != null) {
+                if (playerHpLabel != null) {
             playerHpLabel.y = playerHpBar.y - 14;
             playerHpLabel.x = playerHpBar.x + (playerHpBar.width() - playerHpLabel.textWidth) / 2;
         }
@@ -360,12 +350,7 @@ class CombatState extends HState {
 
 
 class CombatView extends h2d.Object {
-    //effect.Lightning diagonally across the screen
-    //left side and right side both have a settable character portrait
-    //on each side, for each weapon/attack that combatant has, have a button
-    //HP bars on each side
-    //display player's resources
-    
+                        
 }
 
 class AttackFx {
@@ -392,8 +377,7 @@ class DamagePopup {
             t.text = text;
             t.x = x - t.calcTextWidth(text) / 2;
             t.y = y;
-            // animate up and fade out over duration
-            var p = ctx.elapsed / duration;
+                        var p = ctx.elapsed / duration;
             t.y = y - 20 * p;
             t.alpha = 1 - p;
             if (p >= 1) {
@@ -452,22 +436,19 @@ class HpBar extends h2d.Object {
     public inline function height():Float return heightPx;
 
     inline function redraw():Void {
-        // background
-        back.clear();
+                back.clear();
         back.beginFill(backColor, 1);
         back.drawRoundedRect(0, 0, widthPx, heightPx, Std.int(heightPx / 2));
         back.endFill();
 
-        // fill
-        var pct = (maxValue == 0) ? 0.0 : (currentValue / maxValue);
+                var pct = (maxValue == 0) ? 0.0 : (currentValue / maxValue);
         var fillW = widthPx * pct;
         fill.clear();
         fill.beginFill(fillColor, 1);
         fill.drawRoundedRect(0, 0, fillW, heightPx, Std.int(heightPx / 2));
         fill.endFill();
 
-        // border
-        border.clear();
+                border.clear();
         border.lineStyle(1, borderColor, 1);
         border.drawRoundedRect(0, 0, widthPx, heightPx, Std.int(heightPx / 2));
     }

@@ -38,8 +38,7 @@ class HBox extends Box {
             if(untrackedChildren.indexOf(child) != -1) {
                 continue;
             }
-            //trace("h child set at " + child.x);
-            child.x = currentX;
+                        child.x = currentX;
             child.y = 0;
             var childWidth = (forcedWidths[j] >= 0) ? forcedWidths[j] : child.getBounds().width;
             currentX += childWidth + padding;
@@ -89,8 +88,7 @@ class VBox extends Box {
         for (child in children) {
             child.x = padding;
             child.y = currentY;
-            //trace("v child set at " + child.y);
-            if(rowHeight >= 0) {
+                        if(rowHeight >= 0) {
                 currentY += rowHeight + padding;
             }
             else {

@@ -21,24 +21,17 @@ class SplashScreen extends Screen {
 
     public function new(tile: h2d.Tile, ?config: SplashScreenConfig) {
         super();
-        // Set default durations if not provided in config
-        this.fadeInDuration = config != null && config.fadeInDuration != null ? config.fadeInDuration : 1.0;
+                this.fadeInDuration = config != null && config.fadeInDuration != null ? config.fadeInDuration : 1.0;
         this.holdDuration = config != null && config.holdDuration != null ? config.holdDuration : 2.0;
         this.fadeOutDuration = config != null && config.fadeOutDuration != null ? config.fadeOutDuration : 1.0;
 
-        // Setup is called in constructor to initialize visuals immediately
-        setup();
-        // Center the bitmap using the provided tile
-        bitmap = new h2d.Bitmap(tile, this);
+                setup();
+                bitmap = new h2d.Bitmap(tile, this);
         var scene = this.getScene();
-        bitmap.x = (scene.width - tile.width) / 2; // Center horizontally
-        bitmap.y = (scene.height - tile.height) / 2; // Center vertically
-        bitmap.alpha = 0.0; // Start fully transparent
-    }
+        bitmap.x = (scene.width - tile.width) / 2;         bitmap.y = (scene.height - tile.height) / 2;         bitmap.alpha = 0.0;     }
 
     override function setup(): Void {
-        // Create a black background
-        var scene = this.getScene();
+                var scene = this.getScene();
         bg = new h2d.Graphics(this);
         bg.beginFill(0x000000);
         bg.drawRect(0, 0, scene.width, scene.height);
@@ -46,18 +39,15 @@ class SplashScreen extends Screen {
     }
 
     override function onShown(): Void {
-        // Initialize effect state
-        var phase = SplashPhase.FadeIn;
+                var phase = SplashPhase.FadeIn;
         var time = 0.0;
 
-        // Create and start the effect
-        var effect = Effect.from(function(dt) {
+                var effect = Effect.from(function(dt) {
             time += dt;
 
             switch (phase) {
                 case FadeIn:
-                    // Fade the tile in by increasing alpha from 0 to 1
-                    var ratio = time / fadeInDuration;
+                                        var ratio = time / fadeInDuration;
                     if (ratio >= 1.0) {
                         bitmap.alpha = 1.0;
                         phase = SplashPhase.Hold;
@@ -66,35 +56,28 @@ class SplashScreen extends Screen {
                         bitmap.alpha = ratio;
                     }
                 case Hold:
-                    // Hold the tile fully visible for the specified duration
-                    if (time >= holdDuration) {
+                                        if (time >= holdDuration) {
                         phase = SplashPhase.FadeOut;
                         time = 0.0;
                     }
                 case FadeOut:
-                    // Fade the tile out by decreasing alpha from 1 to 0
-                    var ratio = time / fadeOutDuration;
+                                        var ratio = time / fadeOutDuration;
                     if (ratio >= 1.0) {
                         bitmap.alpha = 0.0;
-                        return CoroutineResult.Stop; // Effect completes
-                    } else {
+                        return CoroutineResult.Stop;                     } else {
                         bitmap.alpha = 1.0 - ratio;
                     }
             }
-            return CoroutineResult.WaitNextFrame; // Continue to next frame
-        });
+            return CoroutineResult.WaitNextFrame;         });
 
-        // Dispose of the screen when the effect completes
-        effect.onComplete = function() {
+                effect.onComplete = function() {
             this.dispose();
         };
 
-        // Start the effect
-        effect.run();
+                effect.run();
     }
 
     override function teardown(): Void {
-        // Clean up by removing all children
-        this.removeChildren();
+                this.removeChildren();
     }
 }

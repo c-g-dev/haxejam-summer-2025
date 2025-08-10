@@ -1,16 +1,7 @@
 package ludi.heaps.input;
 
 
-//var i = Input.scope("Controls");
-    //i.isKeyPressed (this.enabled && window.isKeyPressed)
-    //i.of(ControlType).
-    //i.get("tag") //direct access
-    //i.createBehavior(); //behavior to allow for listener reactions
-
-//Input.stashPush();
-//Input.scope("GUI").only();
-//...
-//Input.stashPop();
+                
 
 typedef InputState = Array<{
     name: String,
@@ -31,24 +22,18 @@ class Input {
 
     public static function stashPush(): Void {
         init();
-        // Get the current state of all nodes
-        var state = getState();
-        // Push the state onto the stash
-        stash.push(state);
+                var state = getState();
+                stash.push(state);
     }
 
     public static function stashPop(): Void {
         init();
-        if (stash.length == 0) return; // No state to pop
+        if (stash.length == 0) return;         
+                root.off();
         
-        // Turn off all nodes
-        root.off();
+                var state = stash.pop();
         
-        // Pop the last state from the stash
-        var state = stash.pop();
-        
-        // Apply the enablements by name
-        for (nodeState in state) {
+                for (nodeState in state) {
             var node = scope(nodeState.name);
             if (node != null) {
                 node.enabled = nodeState.enabled;
@@ -65,8 +50,7 @@ class Input {
 
     public static function scope(name: String): InputNode {
         init();
-        // Find node by name, starting from root
-        if (root == null) return null;
+                if (root == null) return null;
         return findNodeByName(root, name);
     }
 
@@ -79,20 +63,16 @@ class Input {
     }
 
     private static function collectState(node: InputNode, state: InputState): Void {
-        // Add current node's state
-        state.push({ name: node.name, enabled: node.enabled });
-        // Recursively collect state for all children
-        for (child in node.children) {
+                state.push({ name: node.name, enabled: node.enabled });
+                for (child in node.children) {
             collectState(child, state);
         }
     }
 
     private static function findNodeByName(node: InputNode, name: String): InputNode {
-        // Check if current node matches the name
-        if (node.name == name) return node;
+                if (node.name == name) return node;
         
-        // Recursively search children
-        for (child in node.children) {
+                for (child in node.children) {
             var found = findNodeByName(child, name);
             if (found != null) return found;
         }
@@ -102,7 +82,6 @@ class Input {
 }
 
 #if !macro
-//@:using(ludi.heaps.input.InputMacros)
 #end
 class InputNode {
     public var name: String;
@@ -144,17 +123,14 @@ class InputNode {
     }
 
     public function only(): Void {
-        // Find root
-        var root = this;
+                var root = this;
         while (root.parent != null) {
             root = root.parent;
         }
         
-        // Disable everything from root
-        root.off();
+                root.off();
         
-        // Enable this node and its parents
-        this.on();
+                this.on();
         var current = this;
         while (current.parent != null) {
             current.parent.enabled = true;

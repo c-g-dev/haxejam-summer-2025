@@ -45,19 +45,9 @@ typedef Chance<T> = {
 }
 
 typedef Range = {min:Float, max:Float};
-typedef ResourceBundle = Map<ResourceType, Int>; // Generic cost / reward bag
-
-// ──────────────────────────────────────────────────────
-// 2.  WORLD
-// ──────────────────────────────────────────────────────
+typedef ResourceBundle = Map<ResourceType, Int>; 
 class World {
-	public var dayCount:Int = 0; // How many full days elapsed
-	public var quarter:Quarter = OccindentalRising; // Current quarter of the day
-	public var zones:Array<TriZone>; // Fixed length = 80
-	public var seedPool:SeedPool; // Gives the “3-pack” each quarter
-	public var player:Mech; // The player’s mech
-	public var inventory:Inventory; // Global player inventory
-
+	public var dayCount:Int = 0; 	public var quarter:Quarter = OccindentalRising; 	public var zones:Array<TriZone>; 	public var seedPool:SeedPool; 	public var player:Mech; 	public var inventory:Inventory; 
 	public function new() {
 		zones = [];
 		seedPool = new SeedPool();
@@ -66,17 +56,9 @@ class World {
 	}
 }
 
-// ──────────────────────────────────────────────────────
-// 3.  TRIANGULAR ZONE (“trizone”)
-// ──────────────────────────────────────────────────────
 class TriZone {
 	public var id:Int;
-	public var neighbours:Array<Int>; // Ids of adjacent triangles
-	public var env:Environment; // Static + dynamic properties
-	public var plant:PlantInstance; // Null if nothing planted
-	public var monsters:Array<Monster>; // 0..n monsters
-	public var isHostile(get, never):Bool; // Derived flag
-
+	public var neighbours:Array<Int>; 	public var env:Environment; 	public var plant:PlantInstance; 	public var monsters:Array<Monster>; 	public var isHostile(get, never):Bool; 
 	public inline function new(id:Int) {
 		this.id = id;
 		neighbours = [];
@@ -88,36 +70,24 @@ class TriZone {
 		return monsters.length > 0;
 }
 
-// Environmental information which may change with time
 class Environment {
-	public var baseHeat:Float = 0; // Average °C
-	public var dailyVariance:Float = 0; // How much it swings each day
-	public var waterLevel:Float = 0; // 0-1
-	public var soil:SoilType = Sand;
+	public var baseHeat:Float = 0; 	public var dailyVariance:Float = 0; 	public var waterLevel:Float = 0; 	public var soil:SoilType = Sand;
 	public var materialYield:Array<Chance<Material>>;
-	public var weatherPattern:Array<WeatherType> = []; // e.g. 16 values per day
-	public var currentWeather:WeatherType = Clear;
+	public var weatherPattern:Array<WeatherType> = []; 	public var currentWeather:WeatherType = Clear;
 
 	public function new() {}
 }
 
-// ──────────────────────────────────────────────────────
-// 4.  PLANTS (TYPE) & INSTANCES
-// ──────────────────────────────────────────────────────
 class PlantType {
 	public var id:String;
 	public var name:String;
 	public var maxHp:Int;
-	public var effect:PlantEffect; // Automatic or activatable
-
-    // Former SeedType properties: planting/germination requirements
-    public var rarity:Rarity;
+	public var effect:PlantEffect; 
+        public var rarity:Rarity;
     public var heatReq:Range;
     public var waterReq:Range;
     public var soilWhitelist:Array<SoilType>;
-    public var sunNeeded:Int;   // Sun points consumed while in Seed state
-    public var germTimeQD:Int;  // Quarter-days before sprouting
-
+    public var sunNeeded:Int;       public var germTimeQD:Int;  
 	public function new(id:String)
 		this.id = id;
 }
@@ -131,9 +101,7 @@ enum PlantEffectKind {
 
 class PlantEffect {
 	public var kind:PlantEffectKind;
-	public var cooldownQD:Int; // Only for activatable
-	public var payload:ResourceBundle; // What it grants OR damages etc.
-}
+	public var cooldownQD:Int; 	public var payload:ResourceBundle; }
 
 enum PlantState {
 	Seed;
@@ -145,11 +113,8 @@ class PlantInstance {
 	public var type:PlantType;
 	public var zoneId:Int;
 	public var hp:Int;
-	public var sunAccum:Int = 0; // Sun collected while still a seed
-	public var ageQD:Int = 0; // Quarter-days since planting
-	public var state:PlantState = Seed;
-	public var cdLeft:Int = 0; // Cool-down remaining (activatable)
-
+	public var sunAccum:Int = 0; 	public var ageQD:Int = 0; 	public var state:PlantState = Seed;
+	public var cdLeft:Int = 0; 
 	public inline function new(t:PlantType, zoneId:Int) {
 		type = t;
 		this.zoneId = zoneId;
@@ -157,9 +122,6 @@ class PlantInstance {
 	}
 }
 
-// ──────────────────────────────────────────────────────
-// 5.  MONSTERS
-// ──────────────────────────────────────────────────────
 class MonsterType {
 	public var id:String;
 	public var name:String;
@@ -184,17 +146,11 @@ class Monster {
 	}
 }
 
-// ──────────────────────────────────────────────────────
-// 6.  COMBAT BUILDING BLOCKS
-// ──────────────────────────────────────────────────────
 class AttackDef {
 	public var id:String;
 	public var name:String;
 	public var cost:ResourceBundle;
-	public var damage:Int; // Could be formula later
-	public var hitsAll:Bool = false; // Meant for AoE
-	public var special:String; // Free-form tag/effect id
-
+	public var damage:Int; 	public var hitsAll:Bool = false; 	public var special:String; 
 	public function new() {}
 }
 
@@ -212,9 +168,6 @@ typedef DamageEvent = {
 	killed:Bool
 };
 
-// ──────────────────────────────────────────────────────
-// 7.  PLAYER MECH, WEAPONS, SKILLS
-// ──────────────────────────────────────────────────────
 class Mech {
 	public var baseStats:Stats = new Stats();
 	public var currentStats:Stats = new Stats();
@@ -223,14 +176,12 @@ class Mech {
 
 	public function new() {}
 
-	// Apply a permanent base stat upgrade (skill, crafting, etc.)
-	public inline function addBase(stat:StatKind, amount:Int) {
+		public inline function addBase(stat:StatKind, amount:Int) {
 		baseStats.add(stat, amount);
 		refresh();
 	}
 
-	// Re-calc current stats (equipment, skill nodes etc.)
-	public function refresh() {
+		public function refresh() {
 		currentStats.copy(baseStats);
 		for (slot in weaponSlots)
 			slot.applyStats(currentStats);
@@ -278,9 +229,7 @@ class WeaponType {
 	public var id:String;
 	public var name:String;
 	public var slotKind:SlotKind;
-	public var passiveStats:Stats; // Added when equipped
-	public var attacks:Array<AttackDef>; // The active skills it grants
-	public var maxLevel:Int = 5;
+	public var passiveStats:Stats; 	public var attacks:Array<AttackDef>; 	public var maxLevel:Int = 5;
 
 	public function new(id:String)
 		this.id = id;
@@ -293,8 +242,7 @@ class WeaponInstance {
 	public function new(t:WeaponType)
 		this.type = t;
 
-	// Stat contribution scaled by level
-	public inline function applyStats(out:Stats) {
+		public inline function applyStats(out:Stats) {
 		var mul = level;
 		out.hp += type.passiveStats.hp * mul;
 		out.power += type.passiveStats.power * mul;
@@ -307,8 +255,7 @@ class SkillNode {
 	public var name:String;
 	public var description:String;
 	public var costPoints:Int;
-	public var prerequisites:Array<String>; // Node ids
-	public var effect:(Stats) -> Void;
+	public var prerequisites:Array<String>; 	public var effect:(Stats) -> Void;
 	public var purchased:Bool = false;
 
 	public function new() {}
@@ -327,9 +274,6 @@ class SkillTree {
 	}
 }
 
-// ──────────────────────────────────────────────────────
-// 8.  INVENTORY
-// ──────────────────────────────────────────────────────
 class Inventory {
 	public var resources:ResourceBundle = new Map();
 	public var materials:Map<MaterialType, Int> = new Map();
@@ -338,18 +282,11 @@ class Inventory {
 	public function new() {}
 }
 
-// ──────────────────────────────────────────────────────
-// 9.  SEED POOL (THE “CARD PACK” EACH QUARTER‐DAY)
-// ──────────────────────────────────────────────────────
 class SeedPool {
-    public var catalog:Array<PlantType>; // All possible plant types (as seeds)
-
+    public var catalog:Array<PlantType>; 
 	public function new() {}
 }
 
-// ──────────────────────────────────────────────────────
-// 11. MATERIALS (FOR COMPLETENESS)
-// ──────────────────────────────────────────────────────
 class Material {
 	public var id:String;
 	public var name:String;
@@ -359,4 +296,3 @@ class Material {
 	public function new() {}
 }
 
-// ───────────────────────────────

@@ -16,35 +16,22 @@ import hxd.res.DefaultFont;
 import ludi.heaps.form.FormControl.FormControlPair;
 
 class TextInputControl extends FormControlPair<String> {
-    // Components
-    //private var label: Text;
-    private var textInput: TextInput;
-    //private var background: Bitmap;
-
-    // Dimensions and styling
-    private var inputWidth: Int = 200;
+            private var textInput: TextInput;
+    
+        private var inputWidth: Int = 200;
     private var inputHeight: Int = 30;
-    //private var padding: Float = 10; // Space between label and input
-    private var inputPadding: Float = 5; // Padding inside the input field
-
+        private var inputPadding: Float = 5; 
     public function new(labelText: String) {
-       // super();
-
-        // Initialize the label
-    /*    label = new Text(font, this);
+       
+            /*    label = new Text(font, this);
         label.text = labelText;
-        label.textColor = 0x808080; // Gray color for the label
-        label.x = 0;
-        label.y = (inputHeight - label.textHeight) / 2; // Vertically center the label
+        label.textColor = 0x808080;         label.x = 0;
+        label.y = (inputHeight - label.textHeight) / 2; 
+                var inputX = label.textWidth + padding;
 
-        // Calculate the starting x-position for the input field
-        var inputX = label.textWidth + padding;
+                var gradient = createGradientBitmap(inputWidth, inputHeight);
 
-        // Create a gradient bitmap for the background
-        var gradient = createGradientBitmap(inputWidth, inputHeight);
-
-        // Initialize the background bitmap
-        background = new Bitmap(Tile.fromBitmap(gradient), this);
+                background = new Bitmap(Tile.fromBitmap(gradient), this);
         background.x = inputX;
         background.y = 0;*/
 
@@ -52,17 +39,11 @@ class TextInputControl extends FormControlPair<String> {
         var border = new Graphics();
         border.lineStyle(1, 0x000000);
         border.drawRect(0, 0, inputWidth, inputHeight);
-       // border.endFill();
-        box.addToBackground(border);
+               box.addToBackground(border);
 
-        // Initialize the text input
-        textInput = new TextInput(DefaultFont.get());
+                textInput = new TextInput(DefaultFont.get());
     
-        //textInput.x = inputX + inputPadding;
-      //  textInput.y = (inputHeight - textInput.textHeight) / 2; // Vertically center the text
-        //textInput.maxWidth = inputWidth - 2 * inputPadding; // Limit text width with padding
-        textInput.textColor = 0x000000; // Black text for contrast
-        var textScale = 0.8;
+                              textInput.textColor = 0x000000;         var textScale = 0.8;
         textInput.scaleX = textScale;
         textInput.scaleY = textScale;
         textInput.x  = inputPadding;
@@ -71,18 +52,13 @@ class TextInputControl extends FormControlPair<String> {
         textInput.smooth = true;
         box.addChild(textInput);
 
-        // Add a drop shadow filter for depth
-      //  this.filter = new DropShadow(2, 0.785, 0x000000, 0.5);
-
+              
         super(labelText, box);
     }
 
-    // Function to create a gradient bitmap
-   /* private function createGradientBitmap(width: Int, height: Int): BitmapData {
+       /* private function createGradientBitmap(width: Int, height: Int): BitmapData {
         var gradient = new BitmapData(width, height);
-        var startColor = 0xDDDDFF; // Light blue
-        var endColor = 0xBBBBFF; // Slightly darker blue
-
+        var startColor = 0xDDDDFF;         var endColor = 0xBBBBFF; 
         for (x in 0...width) {
             var ratio = x / (width - 1);
             var r = Math.round((startColor >> 16) + ratio * ((endColor >> 16) - (startColor >> 16)));
@@ -98,8 +74,7 @@ class TextInputControl extends FormControlPair<String> {
         return gradient;
     }*/
 
-    // Getter and setter for the text input value
-    public var text(get, set): String;
+        public var text(get, set): String;
     private inline function get_text(): String {
         return textInput.text;
     }

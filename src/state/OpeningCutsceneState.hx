@@ -13,6 +13,8 @@ import state.HState.HStateLifeCycle;
 import state.HState.HStateTransitionInFade;
 import state.HState.HStateTransitionOutFade;
 import state.HState.HStateTransitionFadeManager;
+import effects.DreamyScreen.DreamyFilter;
+import hxd.snd.Channel;
 
 enum CutsceneCGs {
     Deadworld1;
@@ -25,6 +27,7 @@ enum CutsceneCGs {
     MechFull;
     Dreamseed;
     FlyingThroughSpace;
+    MechFlyingOverlay;
     PlanetCG;
 }
 
@@ -39,6 +42,16 @@ class OpeningCutsceneState extends HState {
     var overlayCG: Bitmap;
 
     var running: Future;
+    var INITIAL_SCALE: Float = 6;
+
+        var spaceScrollContainer: Object;
+    var spaceScrollTile: Tile;
+    var spaceScrollLeft: Bitmap;
+    var spaceScrollRight: Bitmap;
+    var spaceScrollOffset: Float = 0;
+    var spaceScrollSpeed: Float = 40; 
+    var dreamyFilter: DreamyFilter;
+    var bgmChannel: Channel;
 
     public function new() {
         super();
@@ -58,13 +71,24 @@ class OpeningCutsceneState extends HState {
         overlayContainer.x = cgContainer.x;
         overlayContainer.y = cgContainer.y;
 
-        var bg = makeBitmap(tileFor(Deadworld1));
+        var bg = makeBitmap(tileFor(DreamFlower));
+        bg.scaleX = INITIAL_SCALE;
+        bg.scaleY = INITIAL_SCALE;
         currentCG = bg;
         cgContainer.addChild(bg);
+        
+        dreamyFilter = new DreamyFilter();
+        dreamyFilter.intensity = 5;
+        dreamyFilter.aberration = 20;
+        dreamyFilter.vignette = 5;
+        dreamyFilter.grain =  0.6;
+        dreamyFilter.blur = 70;
+        this.app.s2d.filter = dreamyFilter;
     }
 
     function dispose(): Void {
         if (root != null) {
+            deactivateSpaceScroll();
             this.app.s2d.removeChild(root);
             root = null;
             cgContainer = null;
@@ -72,6 +96,14 @@ class OpeningCutsceneState extends HState {
             textContainer = null;
             currentCG = null;
             overlayCG = null;
+        }
+        if (dreamyFilter != null) {
+            this.app.s2d.filter = null;
+            dreamyFilter = null;
+        }
+        if (bgmChannel != null) {
+            bgmChannel.stop();
+            bgmChannel = null;
         }
     }
 
@@ -82,6 +114,9 @@ class OpeningCutsceneState extends HState {
                 return Future.immediate();
             }
             case Activate: {
+                if (bgmChannel == null) {
+                    bgmChannel = hxd.Res.load("sounds/opening.mp3").toSound().play(true, 0.2);
+                }
                 running = playSequence();
                 return Future.immediate();
             }
@@ -95,39 +130,61 @@ class OpeningCutsceneState extends HState {
         }
     }
 
-    public function onUpdate(dt:Float):Void {}
+    public function onUpdate(dt:Float):Void {
+                if (spaceScrollContainer != null && spaceScrollTile != null) {
+            spaceScrollOffset += spaceScrollSpeed * dt;
+            var w = spaceScrollTile.width;
+            var baseX = -w * 0.5;
+            var offs = spaceScrollOffset % w;
+            spaceScrollLeft.x = baseX - offs;
+            spaceScrollLeft.y = -spaceScrollTile.height * 0.5;
+            spaceScrollRight.x = spaceScrollLeft.x + w;
+            spaceScrollRight.y = spaceScrollLeft.y;
+        }
+    }
 
     function playSequence(): Future {
         return Coro.start((ctx: CoroutineContext) -> {
-            // Black screen fade-in is handled by transitionIn
-            Coro.once(() -> { setCG(Deadworld1, 1.6); });
-            zoomTo(1.3, 6.0).await();
-            fadeOverlayIn(DreamFlower, 3.0).await();
-
+                        Coro.once(() -> {
+                var cg = setCG(DreamFlower, 1.0);
+                                cg.scaleX = INITIAL_SCALE;
+                cg.scaleY = INITIAL_SCALE;
+                zoomTo(2, 12.0);
+            });
+            
+         
             poem([
-                "In the last days of PlantWorld,",
+                "In the last days of Plant World",
                 "the flora learned to grow their roots UP",
                 "and they called these",
                 "DREAMS"
             ]).await();
-            fadeOverlayOut(2.0).await();
-
+          
             poem([
-                "And thus no longer were they chained to the dirt.",
-                "In those days the plants had no roots,",
-                "and so every plant could do as it saw fit."
+                "And thus no longer were they chained to the dirt",
+                "In those days the plants had no roots",
+                "and so every plant could do as it saw fit"
             ]).await();
 
-            crossfadeTo(Deadworld2, 2.5).await();
+
+            crossfadeTo(Deadworld1, 2.5).await();
             poem([
                 "Without the plants' wise grip",
                 "The dirt below disgorged its ancient tensions",
                 "And the earth churned",
                 "And the land rotted into a dusty sea",
-                "And never again were there children."
+                "And never again were there children"
             ]).await();
+            waitSeconds(3.0).await();
 
-            crossfadeTo(Dreamseed, 2.0).await();
+            crossfadeTo(Deadworld2, 2.0).await();
+            waitSeconds(3.0).await();
+
+                        fadeToBlack(1.0).await();
+            Coro.once(() -> { setCG(Deadworld3, 1.0); });
+            fadeFromBlack(1.0).await();
+
+            fadeOverlayIn(Dreamseed, 1.0).await();
             poem([
                 "Their only hope",
                 "The Dreamseed",
@@ -137,26 +194,27 @@ class OpeningCutsceneState extends HState {
                 "What bird would scatter it?"
             ]).await();
 
+            fadeOverlayOut(1.0).await();
+
             crossfadeTo(Deadworld3, 2.0).await();
             fadeOverlayIn(DreamSunflower, 2.0).await();
             poem([
                 "And so",
-                "In the last days of PlantWorld"
+                "In the last days of Plant World"
             ]).await();
-            fadeOverlayOut(1.0).await();
 
-            // Mech halves collide
-            var off: Float = 0;
+                        var off: Float = 0;
             Coro.once(() -> {
-                setCG(null, 1.0);
-                var mechL = makeBitmap(tileFor(MechHalf1));
-                var mechR = makeBitmap(tileFor(MechHalf2));
+                               var mechR = makeBitmap(tileFor(MechHalf1));
+                var mechL = makeBitmap(tileFor(MechHalf2));
                 overlayContainer.addChild(mechL);
                 overlayContainer.addChild(mechR);
+                mechL.scale(2);
+                mechR.scale(2);
                 var y = 0.0;
                 off = Math.max(this.app.s2d.width, this.app.s2d.height);
                 mechL.x = -off; mechL.y = y;
-                mechR.x = off - mechR.tile.width; mechR.y = y;
+                mechR.x = off; mechR.y = y;
                 ctx.setData("mechL", mechL);
                 ctx.setData("mechR", mechR);
                 ctx.setData("off", off);
@@ -166,7 +224,7 @@ class OpeningCutsceneState extends HState {
             var mechRRef: Bitmap = ctx.getData("mechR");
             var offRef: Float = ctx.getData("off");
 
-            var collideTime = 1.5;
+            var collideTime = 0.5;
             Coro.start((cctx: CoroutineContext) -> {
                 Coro.once(() -> {
                     cctx.setData("mechL", mechLRef);
@@ -174,23 +232,35 @@ class OpeningCutsceneState extends HState {
                     cctx.setData("off", offRef);
                 });
                 var t = cctx.elapsed / collideTime;
-                if (t >= 1) return Stop;
+                if (t >= 1) {
+                    var ml: Bitmap = cctx.getData("mechL");
+                    var mr: Bitmap = cctx.getData("mechR");
+                    ml.remove();
+                    mr.remove();
+                    return Stop;
+                }
                 var ml: Bitmap = cctx.getData("mechL");
                 var mr: Bitmap = cctx.getData("mechR");
                 var offv: Float = cctx.getData("off");
-                ml.x = -ml.tile.width - (offv - ml.tile.width) * (1 - t);
-                mr.x = (offv - mr.tile.width) * (1 - t);
+                var mlHalfW = ml.tile.width * ml.scaleX * 0.5;
+                var mrHalfW = mr.tile.width * mr.scaleX * 0.5;
+                ml.x = (-offv) * (1 - t) + (-mlHalfW) * t;
+                mr.x = (offv) * (1 - t) + (mrHalfW) * t;
+                
                 return WaitNextFrame;
             }).await();
 
-            // Cut to black then show full mech
-            Coro.once(() -> { clearOverlays(); });
+                        Coro.once(() -> { clearOverlays(); });
             fadeToBlack(0.2).await();
             Coro.once(() -> { setCG(MechFull, 1.0); });
             fadeFromBlack(0.8).await();
             poem(["The flora built a MACHINE"]).await();
 
+                                  waitSeconds(2).await();
+
             crossfadeTo(FlyingThroughSpace, 2.5).await();
+            fadeOverlayIn(MechFlyingOverlay, 2.5).await();
+       
             poem([
                 "To search for a new garden",
                 "In the unknown eons",
@@ -200,8 +270,10 @@ class OpeningCutsceneState extends HState {
                 "Until..."
             ]).await();
 
-            crossfadeTo(PlanetCG, 2.5).await();
+            waitSeconds(2).await();
+            fadeToBlack(0.2).await();
 
+            
             Coro.once(() -> { setState(new PlanetaryState()); });
             return Stop;
         }).future();
@@ -209,12 +281,11 @@ class OpeningCutsceneState extends HState {
 
     function poem(lines: Array<String>): Future {
         return Coro.start((ctx: CoroutineContext) -> {
-            var scale = 0.28;
-            var lineSpacing = 1.25;
+            var scale = 0.50;
+            var lineSpacing = 1.45;
             var font: Font = hxd.Res.fonts.plex_mono_64.toFont();
 
-            // Pre-measure to center without needing getBounds()
-            var measured = measureTextBlock(lines, font, scale, lineSpacing);
+                        var measured = measureTextBlock(lines, font, scale, lineSpacing);
 
             Coro.once(() -> {
                 var pt = new PoignantText(lines, font, scale);
@@ -231,16 +302,18 @@ class OpeningCutsceneState extends HState {
         }).future();
     }
 
-    function setCG(cg: CutsceneCGs, alpha: Float): Void {
+    function setCG(cg: CutsceneCGs, alpha: Float): Bitmap {
         clearOverlays();
         if (currentCG != null) {
             cgContainer.removeChild(currentCG);
             currentCG = null;
         }
-        if (cg == null) return;
+        if (cg == null) return null;
+        if (cg == FlyingThroughSpace) activateSpaceScroll(); else deactivateSpaceScroll();
         currentCG = makeBitmap(tileFor(cg));
         currentCG.alpha = alpha;
         cgContainer.addChild(currentCG);
+        return currentCG;
     }
 
     function crossfadeTo(cg: CutsceneCGs, duration: Float): Future {
@@ -248,6 +321,7 @@ class OpeningCutsceneState extends HState {
             var next: Bitmap = null;
             var start: Bitmap = null;
             Coro.once(() -> {
+                if (cg == FlyingThroughSpace) activateSpaceScroll();
                 next = makeBitmap(tileFor(cg));
                 next.alpha = 0;
                 ctx.setData("next", next);
@@ -260,6 +334,7 @@ class OpeningCutsceneState extends HState {
                 var st: Bitmap = ctx.getData("start");
                 if (st != null) cgContainer.removeChild(st);
                 currentCG = ctx.getData("next");
+                                if (cg == FlyingThroughSpace) activateSpaceScroll(); else deactivateSpaceScroll();
                 return Stop;
             }
             var st2: Bitmap = ctx.getData("start");
@@ -308,23 +383,46 @@ class OpeningCutsceneState extends HState {
         }
     }
 
+        function activateSpaceScroll(): Void {
+        if (spaceScrollContainer != null) return;
+        spaceScrollTile = hxd.Res.cutscene.skybox.toTile();
+        spaceScrollContainer = new Object(root);
+                root.addChildAt(spaceScrollContainer, 0);
+
+                var s = this.app.s2d.height / spaceScrollTile.height;
+        spaceScrollContainer.scaleX = s;
+        spaceScrollContainer.scaleY = s;
+        spaceScrollContainer.x = this.app.s2d.width * 0.5;
+        spaceScrollContainer.y = this.app.s2d.height * 0.5;
+
+        spaceScrollLeft = new Bitmap(spaceScrollTile, spaceScrollContainer);
+        spaceScrollRight = new Bitmap(spaceScrollTile, spaceScrollContainer);
+        spaceScrollOffset = 0;
+    }
+
+    function deactivateSpaceScroll(): Void {
+        if (spaceScrollContainer == null) return;
+        spaceScrollContainer.remove();
+        spaceScrollContainer = null;
+        spaceScrollLeft = null;
+        spaceScrollRight = null;
+        spaceScrollTile = null;
+        spaceScrollOffset = 0;
+    }
+
     function zoomTo(scale: Float, duration: Float): Future {
-        var startScale = cgContainer.scaleX;
-        if (startScale == 0) startScale = 1.0;
+        var startScale = currentCG != null ? currentCG.scaleX : 1.0;
         return Coro.start((ctx: CoroutineContext) -> {
+            trace("zoomTo " + scale + " " + duration);
             var r = ctx.elapsed / duration;
             if (r >= 1) {
-                cgContainer.scaleX = scale;
-                cgContainer.scaleY = scale;
-                overlayContainer.scaleX = scale;
-                overlayContainer.scaleY = scale;
+                currentCG.scaleX = scale;
+                currentCG.scaleY = scale;
                 return Stop;
             }
             var s = startScale + (scale - startScale) * r;
-            cgContainer.scaleX = s;
-            cgContainer.scaleY = s;
-            overlayContainer.scaleX = s;
-            overlayContainer.scaleY = s;
+            currentCG.scaleX = s;
+            currentCG.scaleY = s;
             return WaitNextFrame;
         }).future();
     }
@@ -371,26 +469,27 @@ class OpeningCutsceneState extends HState {
     }
 
     function makeBitmap(t: Tile): Bitmap {
-        var b = new Bitmap(t);
-        b.x = -t.width * 0.5;
-        b.y = -t.height * 0.5;
+                var centered = t.center();
+        var b = new Bitmap(centered);
+        b.x = 0;
+        b.y = 0;
         return b;
     }
 
     function tileFor(cg: CutsceneCGs): Tile {
-        // Placeholder tiles; replace with actual assets later
-        return switch (cg) {
-            case Deadworld1: Tile.fromColor(0x101010, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
-            case DreamFlower: Tile.fromColor(0x556B2F, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
-            case Deadworld2: Tile.fromColor(0x1A1A1A, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
-            case Deadworld3: Tile.fromColor(0x0F0F0F, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
-            case DreamSunflower: Tile.fromColor(0xB8860B, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
-            case MechHalf1: Tile.fromColor(0x224488, 512, 512);
-            case MechHalf2: Tile.fromColor(0x882244, 512, 512);
-            case MechFull: Tile.fromColor(0x6699CC, 768, 512);
-            case Dreamseed: Tile.fromColor(0x2F4F4F, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
-            case FlyingThroughSpace: Tile.fromColor(0x000022, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
-            case PlanetCG: Tile.fromColor(0x003300, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height));
+                return switch (cg) {
+            case Deadworld1: hxd.Res.cutscene.deadworld1.toTile().center();
+            case DreamFlower: hxd.Res.cutscene.dreamflower.toTile().center();
+            case Deadworld2: hxd.Res.cutscene.deadworld2.toTile().center();
+            case Deadworld3: Tile.fromColor(0x0F0F0F, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height)).center();
+            case DreamSunflower: hxd.Res.cutscene.dreamsunflower.toTile().center();
+            case MechHalf1:  hxd.Res.cutscene.mechhalf.toTile();
+            case MechHalf2: hxd.Res.cutscene.mechhalf2.toTile();
+            case MechFull: hxd.Res.guy1.toTile();
+            case Dreamseed: hxd.Res.cutscene.seed.toTile().center();
+                        case FlyingThroughSpace: Tile.fromColor(0x00000000, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height)).center();
+            case MechFlyingOverlay: hxd.Res.cutscene.guymove.toTile().center();
+            case PlanetCG: Tile.fromColor(0x003300, Std.int(this.app.s2d.width), Std.int(this.app.s2d.height)).center();
         }
     }
 

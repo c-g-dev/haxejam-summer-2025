@@ -1,7 +1,5 @@
 package ludi.heaps.macro;
 
-//init macro to let sd3 render after s2d
-//usage: --init ludi.heaps.macro.SceneRenderOrder.swap();
 class StageRenderOrder {
 
     public static function swap() {

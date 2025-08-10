@@ -25,8 +25,7 @@ class SoccerBallPrim extends h3d.prim.Primitive {
             normals.push(x);
             normals.push(y);
             normals.push(z);
-        } // Already unit normals
-
+        } 
         var uvs = [];
         for (i in 0...60) {
             var x = pos[i*3];
@@ -38,8 +37,7 @@ class SoccerBallPrim extends h3d.prim.Primitive {
             uvs.push(v);
         }
 
-        // Define the vertex format: position (vec3), normal (vec3), uv (vec2)
-        @:privateAccess var format = new hxd.BufferFormat([
+                @:privateAccess var format = new hxd.BufferFormat([
             { name: "position", type: DVec3 },
             { name: "normal", type: DVec3 },
             { name: "uv", type: DVec2 }
@@ -60,8 +58,7 @@ class SoccerBallPrim extends h3d.prim.Primitive {
         var vbuf = new h3d.Buffer(60, format);
         vbuf.uploadFloats(vecs, 0, 60);
 
-        // Precompute bounds
-        cachedBounds.empty();
+                cachedBounds.empty();
         for (i in 0...60) {
             var px = pos[i*3];
             var py = pos[i*3+1];
@@ -101,50 +98,32 @@ class Main extends App {
 
     override function init() {
         hxd.Res.initEmbed();
-        // Create a sphere primitive with radius 1, 32 horizontal segments, and 32 vertical segments
-        var prim = new SoccerBallPrim();
-        //prim.addNormals(); // Add normals for lighting
-        //prim.addUVs();     // Add UVs if you want to texture it later
-
-        // Create a mesh from the primitive and add it to the 3D scene
-        sphere = new Mesh(prim, s3d);
+                var prim = new SoccerBallPrim();
+                
+                sphere = new Mesh(prim, s3d);
         sphere.material.mainPass.culling = None;
-        sphere.material.mainPass.enableLights = true; // Enable lighting on the material
-        sphere.material.shadows = true; // Enable shadows if needed
+        sphere.material.mainPass.enableLights = true;         sphere.material.shadows = true; 
+                          var tex = hxd.Res.palettetown.toTexture();              tex.wrap = Clamp;              tex.filter = Linear;              sphere.material.texture = tex;
 
-             // Load and apply the Earth texture
-             var tex = hxd.Res.palettetown.toTexture(); // Assumes the resource is embedded as 'earth_jpg'
-             tex.wrap = Clamp; // Clamp wrapping to avoid seams on the sphere
-             tex.filter = Linear; // Smooth filtering for better appearance
-             sphere.material.texture = tex;
-
-        // Add a directional light
-        var light = new DirLight(new h3d.Vector(-1, -3, -5), s3d);
+                var light = new DirLight(new h3d.Vector(-1, -3, -5), s3d);
         light.enableSpecular = true;
 
-        // Add ambient light
-     //   var ambient = new AmbientLight();
-
-        // Position the camera
-        s3d.camera.pos.set(0, 0, 5);
+             
+                s3d.camera.pos.set(0, 0, 5);
         s3d.camera.target.set(0, 0, 0);
     }
 
     override function update(dt: Float) {
-        var rotationSpeed = 2.0; // Radians per second; adjust as needed for sensitivity
-
-        // Rotate around Y-axis (left-right) with left and right arrow keys
-        if (Key.isDown(Key.LEFT)) {
+        var rotationSpeed = 2.0; 
+                if (Key.isDown(Key.LEFT)) {
             sphere.rotate(0, rotationSpeed * dt, 0);
         }
         if (Key.isDown(Key.RIGHT)) {
             sphere.rotate(0, -rotationSpeed * dt, 0);
         }
 
-        // Rotate around X-axis (up-down) with up and down arrow keys
-        if (Key.isDown(Key.UP)) {
-            sphere.rotate(-rotationSpeed * dt, 0, 0); // Negative to tilt top towards camera
-        }
+                if (Key.isDown(Key.UP)) {
+            sphere.rotate(-rotationSpeed * dt, 0, 0);         }
         if (Key.isDown(Key.DOWN)) {
             sphere.rotate(rotationSpeed * dt, 0, 0);
         }

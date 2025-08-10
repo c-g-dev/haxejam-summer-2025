@@ -44,8 +44,7 @@ class GhostTrailCentered extends h2d.Object {
 		if (_accum >= spawnDelay && (cam.dx * cam.dx + cam.dy * cam.dy) > 0) {
 			_accum -= spawnDelay;
 			trace("spawning ghost: " + -cam.dx);
-			spawnGhost(-cam.dx, -cam.dy); // opposite direction of scrolling
-		}
+			spawnGhost(-cam.dx, -cam.dy); 		}
 
 		/* Update existing ghosts */
 		for (g in _ghosts.copy()) {
@@ -71,8 +70,7 @@ class GhostTrailCentered extends h2d.Object {
 
 	function spawnGhost(vx:Float, vy:Float) {
 		var s = new h2d.Bitmap(target.tile, this);
-		//s.setPosition(target.x, target.y); // same spot as the mech
-		s.rotation = target.rotation;
+				s.rotation = target.rotation;
 		s.scaleX = target.scaleX;
 		s.scaleY = target.scaleY;
 		s.alpha = startAlpha;

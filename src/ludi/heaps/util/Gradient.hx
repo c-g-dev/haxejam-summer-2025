@@ -20,13 +20,9 @@ abstract Gradient(hxd.Pixels) {
 			var pixels = hxd.Pixels.alloc(resolution, thei, ARGB);
 			var yoff   = 0;
             var grad = createGradientObject(stops, resolution);
-			//for (g in stops) {
-				@:privateAccess Gradients.appendPixels(pixels, grad, resolution, ghei, yoff);
+							@:privateAccess Gradients.appendPixels(pixels, grad, resolution, ghei, yoff);
 				yoff += ghei;
-			//}
-			//tex.uploadPixels(pixels);
-			//pixels.dispose();
-            return pixels;
+									            return pixels;
 		}
         var p = uploadPixels();
         trace("p.width: " + p.width);
@@ -37,31 +33,19 @@ abstract Gradient(hxd.Pixels) {
     static function createGradientObject(stops: Array<{location: Float, color: Color, opacity: Float}>, resolution: Int = 256): hxd.fmt.grd.Data.Gradient {
 
         trace("stops: " + stops);
-        // Create a new Gradient object
-        var gradient = new hxd.fmt.grd.Data.Gradient();
-        gradient.interpolation = 100; // Locations are interpreted as percentages
-        gradient.gradientStops = [];
+                var gradient = new hxd.fmt.grd.Data.Gradient();
+        gradient.interpolation = 100;         gradient.gradientStops = [];
     
-        // Populate gradient stops
-        for (stop in stops) {
-            // Create a ColorStop for the color and location
-            var colorStop = new hxd.fmt.grd.Data.ColorStop();
-            colorStop.color = stop.color; // Color as RGB or HSB
-            colorStop.location = Std.int(stop.location * 100); // Convert 0-1 to 0-100
-            colorStop.midpoint = 50; // Default, not used in rendering
-            colorStop.type = User; // Default type, not used in rendering
-    
-            // Create a GradientStop combining color and opacity
-            var gradientStop = new hxd.fmt.grd.Data.GradientStop();
+                for (stop in stops) {
+                        var colorStop = new hxd.fmt.grd.Data.ColorStop();
+            colorStop.color = stop.color;             colorStop.location = Std.int(stop.location * 100);             colorStop.midpoint = 50;             colorStop.type = User;     
+                        var gradientStop = new hxd.fmt.grd.Data.GradientStop();
             gradientStop.colorStop = colorStop;
-            gradientStop.opacity = stop.opacity * 100; // Convert 0-1 to 0-100
-    
-            // Add to the gradient
-            gradient.gradientStops.push(gradientStop);
+            gradientStop.opacity = stop.opacity * 100;     
+                        gradient.gradientStops.push(gradientStop);
         }
     
-        // Generate and return the texture
-        return gradient;
+                return gradient;
     }
 
     public function toTile(): h2d.Tile {
@@ -73,17 +57,14 @@ abstract Gradient(hxd.Pixels) {
     }
 
     private static function _rotatePixels(original: hxd.Pixels): hxd.Pixels {
-        // Get original dimensions
-        trace("original.width: " + original.width);
+                trace("original.width: " + original.width);
         trace("original.height: " + original.height);
         var originalWidth = original.width;
         var originalHeight = original.height;
         
-        // Create new hxd.Pixels with swapped dimensions
-        var rotated = hxd.Pixels.alloc(originalHeight, originalWidth, original.format);
+                var rotated = hxd.Pixels.alloc(originalHeight, originalWidth, original.format);
         
-        // Fill the new image with rotated pixel data
-        for (newY in 0...originalWidth) {
+                for (newY in 0...originalWidth) {
             for (newX in 0...originalHeight) {
                 var originalX = newY;
                 var originalY = originalHeight - 1 - newX;

@@ -9,27 +9,17 @@ import h2d.Object;
 import h2d.Scene;
 
 class UICircler extends Object {
-	/**
-	 * How far the objects will travel from the circler’s center.
-	 */
+	
 	public var radius : Float;
 
-	/**
-	 * Seconds the tween takes.
-	 */
+	
 	public var duration : Float = 0.35;
 
 
-	/**
-	 * Internal storage of children + their final scale.
-	 */
+	
 	var items : Array<{ obj:Object, targetScale:Float }> = [];
 
-	/**
-	 * @param parent     where the circler itself will be added to.
-	 * @param x,y        position of the circler.
-	 * @param radius     distance from centre to which the items should fly.
-	 */
+	
 	public function new( parent:Object, x:Float, y:Float, radius:Float = 120 ) {
 		super( parent );
 		this.x = x;
@@ -39,8 +29,7 @@ class UICircler extends Object {
 
 	public function addItem( obj:Object, targetScale:Float = 1 ) {
 		items.push( { obj: obj, targetScale: targetScale } );
-		addChild( obj );               // re-parent under the circler
-		obj.setPosition( 0, 0 );
+		addChild( obj );               		obj.setPosition( 0, 0 );
 		obj.setScale( 0 );
 	}
 
@@ -48,8 +37,7 @@ class UICircler extends Object {
 		if ( items.length == 0 ) return Future.immediate();
 
 		final count = items.length;
-		final step  = (count == 1) ? 0 : (Math.PI * 2) / count; // angular distance
-		final base  = -Math.PI/2;         
+		final step  = (count == 1) ? 0 : (Math.PI * 2) / count; 		final base  = -Math.PI/2;         
         
         var coros: Array<Coroutine> = [];
 

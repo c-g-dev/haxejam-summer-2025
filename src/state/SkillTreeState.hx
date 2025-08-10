@@ -18,17 +18,14 @@ class SkillTreeState extends HState {
     var lines: h2d.Graphics;
     var nav: ArrowNav;
 
-    // Right description panel
-    var panelRoot: h2d.Object;
+        var panelRoot: h2d.Object;
     var titleText: h2d.Text;
     var descText: h2d.Text;
     var costText: h2d.Text;
     var pointsText: h2d.Text;
 
-    // Node id -> widget
-    var nodeViews: Map<String, Box> = new Map();
-    // Node id -> position center
-    var nodeCenters: Map<String, {x:Float, y:Float}> = new Map();
+        var nodeViews: Map<String, Box> = new Map();
+        var nodeCenters: Map<String, {x:Float, y:Float}> = new Map();
     var selectedNodeId: String = null;
 
     function setup(): Void {
@@ -47,8 +44,7 @@ class SkillTreeState extends HState {
     }
 
     function layoutAndBuild(): Void {
-        // Clear previous
-        graphLayer.removeChildren();
+                graphLayer.removeChildren();
         lines = new h2d.Graphics(graphLayer);
         nodeViews = new Map();
         nodeCenters = new Map();
@@ -113,8 +109,7 @@ class SkillTreeState extends HState {
         var tree = getTree();
         if (tree == null || tree.nodes == null) return;
 
-        // Group nodes by a simple level heuristic = number of prerequisites
-        var cols = new Map<Int, Array<SkillNode>>();
+                var cols = new Map<Int, Array<SkillNode>>();
         for (n in tree.nodes) {
             var lvl = (n.prerequisites == null) ? 0 : n.prerequisites.length;
             var arr = cols.get(lvl);
@@ -122,8 +117,7 @@ class SkillTreeState extends HState {
             arr.push(n);
         }
 
-        // Sort columns by key
-        var levels:Array<Int> = [];
+                var levels:Array<Int> = [];
         for (k in cols.keys()) levels.push(k);
         levels.sort((a,b) -> a - b);
 
@@ -132,13 +126,11 @@ class SkillTreeState extends HState {
         var nodeW = 180.0;
         var nodeH = 44.0;
 
-        // Build nodes and bind navigation only for unlocked or available ones
-        for (i in 0...levels.length) {
+                for (i in 0...levels.length) {
             var lvl = levels[i];
             var list = cols.get(lvl);
             if (list == null) continue;
-            // vertical spacing
-            var rowGap = (h - 32) / (list.length + 1);
+                        var rowGap = (h - 32) / (list.length + 1);
             for (j in 0...list.length) {
                 var node = list[j];
                 var btn: Box = (new FormButton(node.name) : Box);
@@ -150,19 +142,14 @@ class SkillTreeState extends HState {
                 nodeViews.set(node.id, btn);
                 nodeCenters.set(node.id, { x: cx, y: cy });
 
-                // Visual state
-                var state = getNodeState(node);
+                                var state = getNodeState(node);
                 switch state {
-                    case 0: // purchased
-                        btn.alpha = 1.0;
-                    case 1: // available
-                        btn.alpha = 0.95;
-                    case 2: // locked
-                        btn.alpha = 0.5;
+                    case 0:                         btn.alpha = 1.0;
+                    case 1:                         btn.alpha = 0.95;
+                    case 2:                         btn.alpha = 0.5;
                 }
 
-                // Only bind navigable (purchased or available)
-                if (state != 2) {
+                                if (state != 2) {
                     final nodeId = node.id;
                     btn.onClick(_ -> onSelectNode(nodeId));
                     nav.bind(btn, (e:ArrowNavEvent) -> {
@@ -180,8 +167,7 @@ class SkillTreeState extends HState {
         }
     }
 
-    // 0 purchased, 1 available, 2 locked
-    function getNodeState(n: SkillNode): Int {
+        function getNodeState(n: SkillNode): Int {
         if (n.purchased) return 0;
         var tree = getTree();
         if (n.prerequisites == null || n.prerequisites.length == 0) return 1;
@@ -216,16 +202,13 @@ class SkillTreeState extends HState {
         if (node == null) return;
         var state = getNodeState(node);
         if (state == 2) {
-            // locked, cannot select
-            updatePanel(nodeId);
+                        updatePanel(nodeId);
             return;
         }
 
-        // If available and not purchased, attempt unlock via world event
-        if (!node.purchased && state == 1) {
+                if (!node.purchased && state == 1) {
             WorldEngine.enqueue(new ActivateSkillTreeNodeEvent(nodeId));
-            // Rebuild to reflect changes
-            layoutAndBuild();
+                        layoutAndBuild();
         } else {
             updatePanel(nodeId);
         }
@@ -252,8 +235,7 @@ class SkillTreeState extends HState {
             costText.text = 'Cost: ' + n.costPoints + ' point(s)';
             costText.textColor = 0xFFD166;
         } else {
-            // locked
-            costText.text = 'Locked. Requires: ' + (n.prerequisites == null ? '(none)' : n.prerequisites.join(', '));
+                        costText.text = 'Locked. Requires: ' + (n.prerequisites == null ? '(none)' : n.prerequisites.join(', '));
             costText.textColor = 0xFF8C8C;
         }
     }

@@ -3,6 +3,7 @@ package ui;
 import h2d.Object;
 import h2d.Text;
 import h2d.Font;
+import h2d.filter.DropShadow;
 import heaps.coroutine.Future;
 import heaps.coroutine.Coro;
 import heaps.coroutine.Coroutine;
@@ -15,7 +16,7 @@ class PoignantText extends Object {
 
     var letterFadeDuration: Float = 0.06;
     var linePauseDuration: Float = 0.6;
-    var lineSpacingMultiplier: Float = 1.25;
+    var lineSpacingMultiplier: Float = 1.45;
 
     var letterNodes: Array<Text> = [];
     var lineStartIndex: Array<Int> = [];
@@ -31,6 +32,7 @@ class PoignantText extends Object {
         this.lines = lines;
         this.font = font != null ? font : hxd.Res.fonts.plex_mono_64.toFont();
         this.textScale = textScale != null ? textScale : 0.30;
+                this.filter = new DropShadow(0, 0, 0x000000, 1.0, 6, 2);
     }
 
     function buildLetters(): Void {
@@ -52,10 +54,11 @@ class PoignantText extends Object {
                     t.scaleX = textScale;
                     t.scaleY = textScale;
                     t.alpha = 0;
+                    t.textColor = 0xFFFFFF;
+                    t.dropShadow = { dx: 3, dy: 3, color: 0x000000, alpha: 1.0 };
                     t.x = cursorX;
                     t.y = y;
-                    // advance cursor by this character's width (unscaled width * scale)
-                    var advance = t.textWidth * t.scaleX;
+                                        var advance = t.textWidth * t.scaleX;
                     cursorX += advance;
                     letterNodes.push(t);
                 }
@@ -68,8 +71,7 @@ class PoignantText extends Object {
             y += lineHeight;
         }
 
-        // Center each line relative to the widest line
-        var maxLineWidth: Float = 0;
+                var maxLineWidth: Float = 0;
         for (w in lineWidths) if (w > maxLineWidth) maxLineWidth = w;
         for (li in 0...lines.length) {
             var count = lineLetterCounts[li];
@@ -103,8 +105,7 @@ class PoignantText extends Object {
             });
 
             if (skipToComplete) {
-                // Ensure visual completion and stop
-                for (n in letterNodes) n.alpha = 1.0;
+                                for (n in letterNodes) n.alpha = 1.0;
                 return Stop;
             }
 
@@ -115,8 +116,7 @@ class PoignantText extends Object {
             var lettersInLine = lineLetterCounts[lineIndex];
 
             if (lettersInLine == 0) {
-                // Empty line: pause, then advance
-                if (!inLinePause) {
+                                if (!inLinePause) {
                     inLinePause = true;
                     phaseStartTime = ctx.elapsed;
                 }
@@ -144,8 +144,7 @@ class PoignantText extends Object {
                     }
                     return WaitNextFrame;
                 } else {
-                    // Finished the line's last character
-                    if (lineIndex >= lines.length - 1) {
+                                        if (lineIndex >= lines.length - 1) {
                         return Stop;
                     }
                     inLinePause = true;
@@ -153,8 +152,7 @@ class PoignantText extends Object {
                     return WaitNextFrame;
                 }
             } else {
-                // Pausing after a line before moving to the next
-                var ratio = (ctx.elapsed - phaseStartTime) / linePauseDuration;
+                                var ratio = (ctx.elapsed - phaseStartTime) / linePauseDuration;
                 if (ratio >= 1.0) {
                     lineIndex++;
                     charIndex = 0;

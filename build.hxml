@@ -1,7 +1,7 @@
 -cp src
 
 -lib heaps
--lib hlsdl
+#-lib hlsdl
 -lib format
 -lib ludi-commons
 -lib heaps-feather-icons
@@ -10,8 +10,11 @@
 -lib utest
 -lib deepnightLibs
 
--D windowSize=1280x720
 
--hl build.hl
+-D windowSize=1280x720
+-D heaps_enable_hl_mp3
+
+#-hl build.hl
+-js bin/build.js
 
 -main UITestMain

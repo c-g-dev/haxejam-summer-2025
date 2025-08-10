@@ -34,27 +34,21 @@ import engine.WorldEngine;
 using Lambda;
 
 class EventTests extends Test {
-	// Shared test-fixture objects
-	var world:World;
+		var world:World;
     var seedT:PlantType;
 	var plantT:PlantType;
 	var weaponT:WeaponType;
 	var monsterT:MonsterType;
 	var matT:Material;
 
-	// ──────────────────────────────────────────────────────────
-    function setup() {
-		// fresh world + cleared event queue
-		world = buildWorld();
+	    function setup() {
+				world = buildWorld();
 		WorldEngine.world = world;
 		WorldEngine.queue  = [];
 		WorldEngine.isProcessing = false;
 	}
 
-	// ──────────────────────────────────────────────────────────
-	//  1.  Successful planting
-	// ──────────────────────────────────────────────────────────
-	function testPlantSeedSuccess() {
+				function testPlantSeedSuccess() {
         WorldTools.addSeed(world, seedT, 1);
         WorldEngine.enqueue(new PlantSeedEvent(0, seedT));
 
@@ -62,12 +56,8 @@ class EventTests extends Test {
 		Assert.equals(0, world.inventory.seeds.get(seedT));
 	}
 
-	// ──────────────────────────────────────────────────────────
-	//  2.  Planting fails because of wrong soil
-	// ──────────────────────────────────────────────────────────
-	function testPlantSeedWrongSoil() {
-		// change soil on zone #1 so whitelist check fails
-        world.zones[1].env.soil = SoilType.Sand;
+				function testPlantSeedWrongSoil() {
+		        world.zones[1].env.soil = SoilType.Sand;
 		WorldTools.addSeed(world, seedT, 1);
 
 		Assert.raises(
@@ -75,10 +65,7 @@ class EventTests extends Test {
 			'Expected planting to fail');
 	}
 
-	// ──────────────────────────────────────────────────────────
-	//  3.  Germination after 2 quarter-days
-	// ──────────────────────────────────────────────────────────
-	function testGermination() {
+				function testGermination() {
         WorldTools.addSeed(world, seedT, 1);
         WorldEngine.enqueue(new PlantSeedEvent(0, seedT));
 
@@ -88,30 +75,21 @@ class EventTests extends Test {
 		Assert.equals(PlantState.Sprouted, world.zones[0].plant.state);
 	}
 
-	// ──────────────────────────────────────────────────────────
-	//  4.  Resource bookkeeping
-	// ──────────────────────────────────────────────────────────
-	function testResourceIncDec() {
+				function testResourceIncDec() {
 		WorldEngine.enqueue(new IncrementResourceEvent(ResourceType.Nitrogen, 5));
 		Assert.equals(5, world.inventory.resources.get(ResourceType.Nitrogen));
 
 		WorldEngine.enqueue(new DecrementResourceEvent(ResourceType.Nitrogen, 3));
 		Assert.equals(2, world.inventory.resources.get(ResourceType.Nitrogen));
 
-		// Under-flow must throw
-		Assert.raises(
+				Assert.raises(
 			() -> WorldEngine.enqueue(new DecrementResourceEvent(ResourceType.Nitrogen, 5)));
 	}
 
-	// ──────────────────────────────────────────────────────────
-	//  5.  Simple combat – player one-shots a monster
-	// ──────────────────────────────────────────────────────────
-	function testCombatKillMonster() {
-		// supply resources for the attack (cost == 0 here, but demo anyway)
-		WorldTools.addResource(world, ResourceType.Sun, 10);
+				function testCombatKillMonster() {
+				WorldTools.addResource(world, ResourceType.Sun, 10);
 
-		// add one monster on zone #0
-		world.zones[0].monsters.push(new Monster(monsterT, 0));
+				world.zones[0].monsters.push(new Monster(monsterT, 0));
 
 		WorldEngine.enqueue(new InitiateCombatEvent(0));
 		WorldEngine.enqueue(new ExecuteAttackEvent(0, "shoot"));
@@ -120,10 +98,7 @@ class EventTests extends Test {
 		Assert.isTrue(world.player.currentStats.hp > 0);
 	}
 
-	// ──────────────────────────────────────────────────────────
-	//  6.  Skill-tree activation
-	// ──────────────────────────────────────────────────────────
-	function testSkillActivation() {
+				function testSkillActivation() {
 		var node = createHpNode();
 		world.player.skillTree.nodes.set(node.id, node);
 		world.player.skillTree.points = 3;
@@ -134,14 +109,10 @@ class EventTests extends Test {
 		Assert.equals(10, world.player.currentStats.hp);
 	}
 
-	// ──────────────────────────────────────────────────────────
-	//  Helper: build a deterministic miniature world
-	// ──────────────────────────────────────────────────────────
-	function buildWorld():World {
+				function buildWorld():World {
 		var w = new World();
 
-		// ──────────────  dummy catalogue / data  ──────────────
-        seedT = new PlantType("basicPlant");
+		        seedT = new PlantType("basicPlant");
         seedT.name           = "Basic Plant";
         seedT.maxHp          = 10;
         seedT.effect         = null;
@@ -190,8 +161,7 @@ class EventTests extends Test {
 		monsterT.attacks   = [monAtk];
 		monsterT.loot      = [ { item:matT, min:1, max:1, chance:0 } ];
 
-		// ────────────── 80 trivial zones  ──────────────
-		for (i in 0...80) {
+				for (i in 0...80) {
 			var z = new TriZone(i);
             z.env.soil        = SoilType.Fertile;
 			z.env.baseHeat    = 20;
@@ -202,8 +172,7 @@ class EventTests extends Test {
 		return w;
 	}
 
-	// small helper to create a +10 HP skill-node
-	function createHpNode():SkillNode {
+		function createHpNode():SkillNode {
 		var n = new SkillNode();
 		n.id            = "hpBoost1";
 		n.name          = "Green Thumb I";

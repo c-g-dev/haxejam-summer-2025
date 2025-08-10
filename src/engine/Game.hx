@@ -16,13 +16,11 @@ class Game {
     public static function seedInitialWorld(): Void {
         world = new World();
 
-        // Create 80 zones with ids 0..79
-        for (zoneId in 0...80) {
+                for (zoneId in 0...80) {
             world.zones.push(new TriZone(zoneId));
         }
 
-        // Adjacency mapping: exact neighbours per trizone id
-        var neighboursById = new Map<Int, Array<Int>>();
+                var neighboursById = new Map<Int, Array<Int>>();
         neighboursById.set(74, [22, 75, 77]);
         neighboursById.set(37, [34, 39, 18]);
         neighboursById.set(0, [32, 3, 50]);
@@ -104,41 +102,35 @@ class Game {
         neighboursById.set(73, [78, 75, 5]);
         neighboursById.set(36, [16, 39, 20]);
 
-        // Assign neighbours to each zone
-        for (zoneId in 0...80) {
+                for (zoneId in 0...80) {
             var neighbours = neighboursById.get(zoneId);
             if (neighbours != null) {
                 world.zones[zoneId].neighbours = neighbours;
             }
         }
 
-        // Safe zones: zone 0 and its immediate neighbours
-        var safeZoneIds = new haxe.ds.IntMap<Bool>();
+                var safeZoneIds = new haxe.ds.IntMap<Bool>();
         safeZoneIds.set(0, true);
         for (n in neighboursById.get(0)) safeZoneIds.set(n, true);
 
-        // Placeholder monster type for hostile zones
-        var basicMonsterType = new MonsterType("slime");
+                var basicMonsterType = new MonsterType("slime");
         basicMonsterType.name = "Slime";
         basicMonsterType.maxHp = 10;
         basicMonsterType.defense = 0;
         basicMonsterType.attacks = [];
         basicMonsterType.loot = [];
 
-        // Populate monsters on all non-safe zones
-        for (zoneId in 0...80) {
+                for (zoneId in 0...80) {
             if (!safeZoneIds.exists(zoneId)) {
                 world.zones[zoneId].monsters.push(new Monster(basicMonsterType, zoneId));
             }
         }
 
-        // After topology and initial content, grant test seeds
-        initializeSeeddata();
+                initializeSeeddata();
     }
 
     public static function initializeSeeddata(): Void {
-        // Basic plant type (also the seed properties)
-        var testPlant = new PlantType("test_plant");
+                var testPlant = new PlantType("test_plant");
         testPlant.name = "Test Plant";
         testPlant.maxHp = 10;
         testPlant.effect = null;

@@ -47,8 +47,7 @@ class SplashState extends HState {
 
     
     public function onUpdate(dt:Float):Void {
-        //trace("SplashState.onUpdate: " + this.elapsed);
-        this.elapsed += dt;
+                this.elapsed += dt;
         if(this.elapsed >= this.waitSeconds) {
             setState(this.nextState);
         }

@@ -17,23 +17,17 @@ import hxd.res.DefaultFont;
 import ludi.heaps.form.FormControl.FormControlPair;
 
 class DropdownControl extends FormControlPair<String> {
-    // Components
-    private var selectedText: Text;
+        private var selectedText: Text;
     private var border: Graphics;
     private var dropdownList: Object;
     private var listItems: Array<Text>;
     private var isOpen: Bool = false;
     private var bg: Box;
 
-    // Dimensions and styling
-    private var dropdownWidth: Int = 200;
+        private var dropdownWidth: Int = 200;
     private var controlHeight: Int = 30;
-    private var itemHeight: Int = 25; // Height of each dropdown item
-    private var thinBorderWidth: Float = 1; // Thin border when not focused
-    private var thickBorderWidth: Float = 3; // Thick border when focused
-
-    // Data
-    private var items: Array<String>;
+    private var itemHeight: Int = 25;     private var thinBorderWidth: Float = 1;     private var thickBorderWidth: Float = 3; 
+        private var items: Array<String>;
     private var selectedIndex: Int = 0;
 
     public function new(labelText: String, items: Array<String>) {
@@ -58,8 +52,7 @@ class DropdownControl extends FormControlPair<String> {
         bg.interactive.onFocusLost = function(e) {
             trace("Focus lost");
             updateFocus();
-           // closeDropdown(); // Close when focus is lost
-        };
+                   };
         bg.interactive.onOver = function(e) {
             interactive.focus();
         };
@@ -71,13 +64,10 @@ class DropdownControl extends FormControlPair<String> {
 
         selectedText = new Text(DefaultFont.get());
         selectedText.text = items[selectedIndex];
-        selectedText.textColor = 0x000000; // Black text for contrast
-        selectedText.x = 5; // Padding inside the dropdown
-        selectedText.y = (controlHeight - selectedText.textHeight) / 2;
+        selectedText.textColor = 0x000000;         selectedText.x = 5;         selectedText.y = (controlHeight - selectedText.textHeight) / 2;
 
         bg.addChild(selectedText);
-        // Initialize the dropdown list (hidden by default)
-        dropdownList = new Object(bg);
+                dropdownList = new Object(bg);
         dropdownList.visible = false;
         createDropdownList();
 
@@ -86,30 +76,19 @@ class DropdownControl extends FormControlPair<String> {
 
         super(labelText, bg);
 
-        // Add border graphics
-
-      //  this.addToBackground(border);
-       // border.x = dropdownX;
-        //border.y = 0;
-
-        // Display the selected item
-      
-        /*
-        // Initialize the label
-        label = new Text(font, this);
-        label.text = labelText;
-        label.textColor = 0x808080; // Gray color for the label
-        label.x = 0;
-        label.y = (controlHeight - label.textHeight) / 2; // Vertically center the label
-
-        // Calculate the starting x-position for the dropdown
-        var dropdownX = label.textWidth + padding;
-
-        // Create gradient background for the dropdown button
         
+                     
+              
+        /*
+                label = new Text(font, this);
+        label.text = labelText;
+        label.textColor = 0x808080;         label.x = 0;
+        label.y = (controlHeight - label.textHeight) / 2; 
+                var dropdownX = label.textWidth + padding;
 
-        // Add an interactive area to toggle the dropdown
-        interactive = new Interactive(dropdownWidth, controlHeight, this);
+                
+
+                interactive = new Interactive(dropdownWidth, controlHeight, this);
         interactive.x = dropdownX;
         interactive.y = 0;
         interactive.onClick = function(e) {
@@ -122,8 +101,7 @@ class DropdownControl extends FormControlPair<String> {
         interactive.onFocusLost = function(e) {
             trace("Focus lost");
             updateFocus();
-           // closeDropdown(); // Close when focus is lost
-        };
+                   };
         interactive.onOver = function(e) {
             interactive.focus();
         };
@@ -131,19 +109,15 @@ class DropdownControl extends FormControlPair<String> {
             interactive.blur();
         }
 
-        // Initialize the dropdown list (hidden by default)
-        dropdownList = new Object(this);
+                dropdownList = new Object(this);
         dropdownList.visible = false;
         createDropdownList(dropdownX, font);
         */
     }
 
-    // Function to create a gradient bitmap
-   /* private function createGradientBitmap(width: Int, height: Int): BitmapData {
+       /* private function createGradientBitmap(width: Int, height: Int): BitmapData {
         var gradient = new BitmapData(width, height);
-        var startColor = 0xDDDDFF; // Light blue
-        var endColor = 0xBBBBFF; // Slightly darker blue
-
+        var startColor = 0xDDDDFF;         var endColor = 0xBBBBFF; 
         for (x in 0...width) {
             var ratio = x / (width - 1);
             var r = Math.round((startColor >> 16) + ratio * ((endColor >> 16) - (startColor >> 16)));
@@ -158,37 +132,29 @@ class DropdownControl extends FormControlPair<String> {
         return gradient;
     }*/
 
-    // Function to create the dropdown list
-    private function createDropdownList() {
+        private function createDropdownList() {
         var listBackground = new Graphics(dropdownList);
-        listBackground.beginFill(0xF0F0F0); // Light gray background for the list
-        listBackground.drawRect(0, 0, dropdownWidth, itemHeight * items.length);
+        listBackground.beginFill(0xF0F0F0);         listBackground.drawRect(0, 0, dropdownWidth, itemHeight * items.length);
         listBackground.endFill();
-        listBackground.lineStyle(thinBorderWidth, 0x000000); // Thin black border
-        listBackground.drawRect(0, 0, dropdownWidth, itemHeight * items.length);
+        listBackground.lineStyle(thinBorderWidth, 0x000000);         listBackground.drawRect(0, 0, dropdownWidth, itemHeight * items.length);
 
         listItems = [];
         for (i in 0...items.length) {
             var itemText = new Text(DefaultFont.get(), dropdownList);
             itemText.text = items[i];
             itemText.textColor = 0x000000;
-            itemText.x = 5; // Padding inside the list
-            itemText.y = i * itemHeight + (itemHeight - itemText.textHeight) / 2;
+            itemText.x = 5;             itemText.y = i * itemHeight + (itemHeight - itemText.textHeight) / 2;
             itemText.smooth = true;
             
             var itemInteractive = new Interactive(dropdownWidth, itemHeight, dropdownList);
             itemInteractive.x = 0;
             itemInteractive.y = i * itemHeight;
             itemInteractive.onOver = function(e) {
-                itemText.textColor = 0xFFFFFF; // White text on hover
-                listBackground.beginFill(0xBBBBFF); // Highlight color
-                listBackground.drawRect(0, i * itemHeight, dropdownWidth, itemHeight);
+                itemText.textColor = 0xFFFFFF;                 listBackground.beginFill(0xBBBBFF);                 listBackground.drawRect(0, i * itemHeight, dropdownWidth, itemHeight);
                 listBackground.endFill();
             };
             itemInteractive.onOut = function(e) {
-                itemText.textColor = 0x000000; // Reset to black
-                listBackground.beginFill(0xF0F0F0); // Reset background
-                listBackground.drawRect(0, i * itemHeight, dropdownWidth, itemHeight);
+                itemText.textColor = 0x000000;                 listBackground.beginFill(0xF0F0F0);                 listBackground.drawRect(0, i * itemHeight, dropdownWidth, itemHeight);
                 listBackground.endFill();
             };
             itemInteractive.onClick = function(e) {
@@ -199,21 +165,10 @@ class DropdownControl extends FormControlPair<String> {
             listItems.push(itemText);
         }
 
-        //dropdownList.x = dropdownX;
-        dropdownList.y = controlHeight; // Position below the button\
-        listBackground.filter = new DropShadow(    4.0,       // distance: offset downward
-            3.14159 * 0.25,       // angle: 0 radians = straight down
-            0x000000,  // color: black for a classic shadow
-            0.5,       // alpha: semi-transparent for softness
-            6.0,       // radius: larger glow for spread effect
-            1.0,       // gain: full intensity
-            2.0,       // quality: decent quality without heavy performance hit
-            true       // smoothColor: gradient shadow for a beautiful, soft look
-        );
+                dropdownList.y = controlHeight;         listBackground.filter = new DropShadow(    4.0,                   3.14159 * 0.25,                   0x000000,              0.5,                   6.0,                   1.0,                   2.0,                   true               );
     }
 
-    // Toggle the dropdown visibility
-    private function toggleDropdown() {
+        private function toggleDropdown() {
         isOpen = !isOpen;
         dropdownList.visible = isOpen;
         var x = dropdownList.absX;
@@ -229,8 +184,7 @@ class DropdownControl extends FormControlPair<String> {
         }
     }
 
-    // Close the dropdown
-    private function closeDropdown() {
+        private function closeDropdown() {
         isOpen = false;
         dropdownList.visible = false;
         this.addChild(dropdownList);
@@ -238,23 +192,19 @@ class DropdownControl extends FormControlPair<String> {
         dropdownList.y = 0;
     }
 
-    // Select an item
-    private function selectItem(index: Int) {
+        private function selectItem(index: Int) {
         selectedIndex = index;
         selectedText.text = items[selectedIndex];
     }
 
-    // Update function to handle focus-based border thickness
-    public function updateFocus() {
+        public function updateFocus() {
         border.clear();
         var isFocused = !bg.interactive.hasFocus() || isOpen;
         var borderWidth = isFocused ? thickBorderWidth : thinBorderWidth;
-        border.lineStyle(borderWidth, 0x000000); // Black border
-        border.drawRect(0, 0, dropdownWidth, controlHeight);
+        border.lineStyle(borderWidth, 0x000000);         border.drawRect(0, 0, dropdownWidth, controlHeight);
     }
 
-    // Getter for the selected item
-    public var selected(get, never): String;
+        public var selected(get, never): String;
     private inline function get_selected(): String {
         return items[selectedIndex];
     }

@@ -5,11 +5,7 @@ import ludi.heaps.screen.ScreenTimeline.ScreenTimelineAction;
 
 class ScreenManager extends h2d.Object {
     static var instance: ScreenManager;
-    static var currentScreen: Screen;          // The currently active screen
-    static var currentEffect: Effect;          // The current transition effect
-    static var pendingOldScreen: Screen;       // The screen to remove after transition
-    static var _timeline: ScreenTimeline;       // The timeline orchestrating screens
-
+    static var currentScreen: Screen;              static var currentEffect: Effect;              static var pendingOldScreen: Screen;           static var _timeline: ScreenTimeline;       
     function new() {
         super();
     }
@@ -21,52 +17,36 @@ class ScreenManager extends h2d.Object {
         scene.addChild(instance);
     }
 
-    /**
-     * Sets up the timeline with a list of actions and starts it.
-     * @param actions The sequence of actions to execute.
-     */
+    
     public static function timeline(actions: Array<ScreenTimelineAction>): Void {
         timeline = new ScreenTimeline(actions);
-        timeline.next(); // Begin with the first action
-    }
+        timeline.next();     }
 
-    /**
-     * Pushes a new screen onto the timeline and switches to it.
-     * @param screen The screen to add and display.
-     */
+    
     public static function push(screen: Screen): Void {
         if (_timeline != null) {
             _timeline.push(screen);
         } else {
-            switchTo(screen); // Fallback if no timeline exists
-        }
+            switchTo(screen);         }
     }
 
-    /**
-     * Switches to a new screen, with an optional transition effect.
-     * @param screen The new screen to display.
-     * @param transition An optional ScreenTransition effect.
-     */
+    
     public static function switchTo(screen: Screen, ?transition: ScreenTransition): Void {
-        // Stop any ongoing transition
-        if (currentEffect != null) {
+                if (currentEffect != null) {
             currentEffect.forceStop();
             currentEffect = null;
         }
 
-        // Clean up any pending old screen
-        if (pendingOldScreen != null) {
+                if (pendingOldScreen != null) {
             instance.removeChild(pendingOldScreen);
             pendingOldScreen.teardown();
             pendingOldScreen = null;
         }
 
-        // Store the current screen as the old screen
-        var oldScreen = currentScreen;
+                var oldScreen = currentScreen;
         currentScreen = screen;
 
-        // Handle screen disposal to advance or rewind the timeline
-        screen.on(function(event: ScreenEvent) {
+                screen.on(function(event: ScreenEvent) {
             switch (event) {
                 case Disposed:
                     if (_timeline != null) {
@@ -80,20 +60,15 @@ class ScreenManager extends h2d.Object {
         });
 
         if (transition != null) {
-            // Handle transition
-            if (oldScreen != null) {
-                pendingOldScreen = oldScreen; // Keep old screen until transition ends
-            }
+                        if (oldScreen != null) {
+                pendingOldScreen = oldScreen;             }
             instance.addChild(currentScreen);
             currentScreen.setup();
-            transition.doTransition(oldScreen, currentScreen); // Start the transition
-            currentEffect = transition;
+            transition.doTransition(oldScreen, currentScreen);             currentEffect = transition;
 
-            // Listen for Effect events
-            transition.topic.subscribe(handleEffectEvent);
+                        transition.topic.subscribe(handleEffectEvent);
         } else {
-            // Immediate switch with no transition
-            if (oldScreen != null) {
+                        if (oldScreen != null) {
                 instance.removeChild(oldScreen);
                 oldScreen.teardown();
             }
@@ -103,17 +78,12 @@ class ScreenManager extends h2d.Object {
         }
     }
 
-    /**
-     * Handles EffectEvent events from the transition.
-     * @param event The event (Start or Complete).
-     */
+    
     private static function handleEffectEvent(event: EffectEvent): Void {
         switch (event) {
             case Start:
-                // Transition started; no action needed
-            case Complete:
-                // Transition finished
-                if (pendingOldScreen != null) {
+                            case Complete:
+                                if (pendingOldScreen != null) {
                     instance.removeChild(pendingOldScreen);
                     pendingOldScreen.teardown();
                     pendingOldScreen = null;
@@ -121,8 +91,7 @@ class ScreenManager extends h2d.Object {
                 if (currentScreen != null) {
                     currentScreen.onShown();
                 }
-                // Clean up event listener
-                if (currentEffect != null) {
+                                if (currentEffect != null) {
                     currentEffect.topic.removeListener(handleEffectEvent);
                     currentEffect = null;
                 }

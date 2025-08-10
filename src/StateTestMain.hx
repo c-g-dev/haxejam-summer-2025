@@ -11,7 +11,7 @@ class StateTestMain extends hxd.App {
         
         HStateManager.app = this;
 
-        var splash1 = new h2d.Bitmap(hxd.Res.guy.toTile());
+        var splash1 = new h2d.Bitmap(hxd.Res.guy.guy.toTile());
         var splash2 = new h2d.Bitmap(hxd.Res.palettetown.toTile());
 
         var splashState1 = new SplashState(splash1, new SplashState(splash2, new MainState()));

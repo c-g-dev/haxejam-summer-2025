@@ -246,42 +246,42 @@ abstract BoxBuilder(Box) {
         return abstract;
     }
 
-    /** Adds a TextPlugin to the box with optional color and font parameters. */
+    
     public function text(text:String, ?color:Int = 0xFFFFFF, ?font:h2d.Font): BoxPluginAppender<TextPlugin> {
         var plugin = new TextPlugin(text, color, font);
         this.addPlugin(plugin);
         return new BoxPluginAppender<TextPlugin>(plugin);
     }
 
-    /** Adds a BackgroundPlugin to the box with a specified tile. */
+    
     public function background(tile:h2d.Tile): BoxPluginAppender<BackgroundPlugin> {
         var plugin = new BackgroundPlugin(tile);
         this.addPlugin(plugin);
         return new BoxPluginAppender<BackgroundPlugin>(plugin);
     }
 
-    /** Adds a DrawBorderPlugin to the box with specified thickness and color. */
+    
     public function border(thickness:Float, color:Int): BoxPluginAppender<DrawBorderPlugin> {
         var plugin = new DrawBorderPlugin(thickness, color);
         this.addPlugin(plugin);
         return new BoxPluginAppender<DrawBorderPlugin>(plugin);
     }
 
-    /** Adds a DrawRoundedBorderPlugin to the box with specified thickness, color, and corner radius. */
+    
     public function roundedBorder(thickness:Float, color:Int, cornerRadius:Float): BoxPluginAppender<DrawRoundedBorderPlugin> {
         var plugin = new DrawRoundedBorderPlugin(thickness, color, cornerRadius);
         this.addPlugin(plugin);
         return new BoxPluginAppender<DrawRoundedBorderPlugin>(plugin);
     }
 
-    /** Adds a RoundedCornersPlugin to the box with a specified corner radius. */
+    
     public function roundedCorners(cornerRadius:Float): BoxPluginAppender<RoundedCornersPlugin> {
         var plugin = new RoundedCornersPlugin(cornerRadius);
         this.addPlugin(plugin);
         return new BoxPluginAppender<RoundedCornersPlugin>(plugin);
     }
 
-    /** Adds a VerticalGradientPlugin to the box with specified top and bottom colors. */
+    
     public function verticalGradient(topColor:Int, bottomColor:Int): BoxPluginAppender<VerticalGradientPlugin> {
         var plugin = new VerticalGradientPlugin(topColor, bottomColor);
         this.addPlugin(plugin);

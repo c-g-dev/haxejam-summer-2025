@@ -66,8 +66,7 @@ class ScrollListView extends h2d.Object {
         
         this.addChild(container);
 
-        // initialize navigation
-        nav = new ArrowNav();
+                nav = new ArrowNav();
     }
 
     public function addItem(text:String) {
@@ -80,8 +79,7 @@ class ScrollListView extends h2d.Object {
                 case Leave:
                     item.setSelected(false);
                 case Selected:
-                    // no-op for the generic list view
-            }
+                                }
         });
     }
 }

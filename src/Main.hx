@@ -46,8 +46,7 @@ class Main extends hxd.App {
     var currentTri: Int = 0;
 
     override function update(dt: Float) {
-        var rotationSpeed = 2.0; // Radians per second; adjust as needed for sensitivity
-        var q_delta = new h3d.Quat();
+        var rotationSpeed = 2.0;         var q_delta = new h3d.Quat();
         q_delta.identity();
         
         if(Key.isPressed(Key.UP)) {
@@ -68,8 +67,7 @@ class Main extends hxd.App {
         
         if (Key.isDown(Key.UP)) {
             var q_temp = new h3d.Quat();
-            q_temp.initRotateAxis(1, 0, 0, -rotationSpeed * dt); // Negative to tilt top towards camera
-            q_delta.multiply(q_delta, q_temp);
+            q_temp.initRotateAxis(1, 0, 0, -rotationSpeed * dt);             q_delta.multiply(q_delta, q_temp);
         }
         if (Key.isDown(Key.DOWN)) {
             var q_temp = new h3d.Quat();
@@ -80,8 +78,7 @@ class Main extends hxd.App {
         
         
         
-        // Apply the inverse rotation to the camera position
-        var q_inv = q_delta.clone();
+                var q_inv = q_delta.clone();
         q_inv.conjugate();
         var m = new h3d.Matrix();
         q_inv.toMatrix(m);

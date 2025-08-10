@@ -4,6 +4,8 @@ import ludi.commons.math.Vec2;
 import h2d.Object;
 import space.Planet;
 import effects.GhostTrailCentered;
+import h2d.Tile;
+import hxd.snd.Channel;
 
 enum Facing { Left; Right; Up; Down; Stopped; }
 
@@ -13,12 +15,24 @@ class MechSpriteOverlay extends Object {
     var bmp: h2d.Bitmap;
     var lastFacing: Facing = Stopped;
 
+    var baseTile: Tile;
+    var moveLeftTile: Tile;
+    var moveRightTile: Tile;
+
+    var engineChannel: Channel; 
     public dynamic function onFacingChanged(f: Facing): Void {}
 
     public function new(planet: Planet) {
         super();
         this.planet = planet;
-        bmp = new h2d.Bitmap(hxd.Res.guy.toTile());
+
+        baseTile = hxd.Res.guy.guy.toTile();
+        moveLeftTile = hxd.Res.guy.guymoveleft.toTile();
+        moveRightTile = hxd.Res.guy.guymoveright.toTile();
+
+        bmp = new h2d.Bitmap(baseTile);
+        bmp.scaleX = 0.3;
+        bmp.scaleY = 0.3;
         this.addChild(bmp);
 
         var ghost = new GhostTrailCentered(bmp, () -> {
@@ -36,8 +50,7 @@ class MechSpriteOverlay extends Object {
         });
         addChild(ghost);
 
-        //center this in screen
-        this.x = (hxd.Window.getInstance().width / 2) - (this.getBounds().width / 2);
+                this.x = (hxd.Window.getInstance().width / 2) - (this.getBounds().width / 2);
         this.y = (hxd.Window.getInstance().height / 2) - (this.getBounds().height / 2);
     }
 
@@ -61,22 +74,40 @@ class MechSpriteOverlay extends Object {
         var dy = screenPos.y - cy;
         var mag = Math.sqrt(dx*dx + dy*dy);
         if (mag < 1e-3) return Stopped;
-        // flatten to 4 dirs by dominant axis
-        if (Math.abs(dx) >= Math.abs(dy)) {
+                if (Math.abs(dx) >= Math.abs(dy)) {
             return dx >= 0 ? Right : Left;
         } else {
             return dy >= 0 ? Down : Up;
         }
     }
 
+    function setEnginePlaying(on:Bool):Void {
+        if (on) {
+            if (engineChannel == null) {
+                engineChannel = hxd.Res.engine.play(true, 0.3);
+            }
+        } else {
+            if (engineChannel != null) {
+                engineChannel.stop();
+                engineChannel = null;
+            }
+        }
+    }
+
     function applyFacingVisual(f: Facing): Void {
         switch f {
             case Left:
-                bmp.scaleX = -Math.abs(bmp.scaleX);
+                bmp.tile = moveLeftTile;
+                setEnginePlaying(true);
             case Right:
-                bmp.scaleX = Math.abs(bmp.scaleX);
-            case Up | Down | Stopped:
-                // keep default; placeholder for swapping tiles/animations
+                bmp.tile = moveRightTile;
+                setEnginePlaying(true);
+            case Up | Down:
+                bmp.tile = baseTile;
+                setEnginePlaying(true);
+            case Stopped:
+                bmp.tile = baseTile;
+                setEnginePlaying(false);
         }
     }
 }

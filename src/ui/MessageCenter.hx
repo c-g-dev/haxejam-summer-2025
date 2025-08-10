@@ -10,14 +10,9 @@ class MessageCenter {
     static var currentMessageDisplayRoutine: Future;
 
     public static function show(message:String) {
-        //create 
-    }
+            }
 
     static function slideUp(message:MessageItem): Future {}
     static function messageLifecycle(message:MessageItem): Future {
-        //fade in
-        //wait 3 seconds
-        //fade out
-        //remove
-    }
+                                    }
 }

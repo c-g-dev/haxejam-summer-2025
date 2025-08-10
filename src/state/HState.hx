@@ -56,9 +56,7 @@ abstract class HState {
         if(this.parentState == null) {
             return Future.immediate();
         }
-        // When a substate exits, it should simply close itself so the parent resumes,
-        // not trigger a full state switch that would recreate the parent.
-        return HStateManager.closeSubState(this.parentState);
+                        return HStateManager.closeSubState(this.parentState);
     }
     
     public function setState(state:HState):Future {
@@ -235,8 +233,7 @@ class HStateTransitionInFade implements HStateTransitionIn {
                     HStateTransitionFadeManager.attach();
                     HStateTransitionFadeManager.blackScreen.alpha = 1;
             });
-          //  trace("HStateTransitionInFade.run: " + HStateTransitionFadeManager.blackScreen.alpha);
-            HStateTransitionFadeManager.blackScreen.alpha = 1 - (ctx.elapsed / this.duration);
+                      HStateTransitionFadeManager.blackScreen.alpha = 1 - (ctx.elapsed / this.duration);
             if(HStateTransitionFadeManager.blackScreen.alpha <= 0) {
                 return Stop;
             }
@@ -253,8 +250,7 @@ class HStateTransitionOutFade implements HStateTransitionOut {
 
     public function run():Future {
         return Coro.start((ctx: CoroutineContext) -> {
-          //  trace("HStateTransitionOutFade.run: " + HStateTransitionFadeManager.blackScreen.alpha);
-            Coro.once(() -> {trace("HStateTransitionOutFade.run");});
+                      Coro.once(() -> {trace("HStateTransitionOutFade.run");});
             Coro.once(() -> {
                 HStateTransitionFadeManager.attach();
                 HStateTransitionFadeManager.blackScreen.alpha = 0;
